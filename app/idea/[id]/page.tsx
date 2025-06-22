@@ -1,25 +1,31 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, use } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, Heart, MessageCircle, Share2, User, Calendar, GitBranch, Send } from "lucide-react"
+import { ArrowLeft, Heart, MessageCircle, Share2, User, Calendar, GitBranch, Send, Target, Lightbulb, Rocket, Sparkles, Loader2 } from "lucide-react"
 import { useAppStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
+import { useIdeaDetails } from "@/lib/supabase/hooks"
+import { toggleLike, addComment, getComments } from "@/lib/supabase/actions"
+import type { CommentWithUser } from "@/types/database"
 
 export default function IdeaDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const { ideas, user, likeIdea, addComment } = useAppStore()
+  const { user } = useAppStore()
   const { toast } = useToast()
   const [comment, setComment] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const idea = ideas.find((i) => i.id === params.id)
+  const [isLiking, setIsLiking] = useState(false)
+  const [comments, setComments] = useState<CommentWithUser[]>([])
+  const [loadingComments, setLoadingComments] = useState(true)
+  
+  const { idea, loading, error } = useIdeaDetails(params.id as string)
 
   useEffect(() => {
     if (!user) {
@@ -27,9 +33,34 @@ export default function IdeaDetailPage() {
     }
   }, [user, router])
 
-  if (!idea) {
+  useEffect(() => {
+    if (idea) {
+      loadComments()
+    }
+  }, [idea])
+
+  const loadComments = async () => {
+    try {
+      const data = await getComments(params.id as string)
+      setComments(data as CommentWithUser[])
+    } catch (error) {
+      console.error('Error loading comments:', error)
+    } finally {
+      setLoadingComments(false)
+    }
+  }
+
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+      </div>
+    )
+  }
+
+  if (error || !idea) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950">
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">アイデアが見つかりません</h2>
           <Button onClick={() => router.push("/dashboard")}>ダッシュボードに戻る</Button>
@@ -84,9 +115,24 @@ export default function IdeaDetailPage() {
     }
   }
 
-  const handleLike = () => {
-    if (user) {
-      likeIdea(idea.id, user.address)
+  const handleLike = async () => {
+    if (!user) return
+    
+    setIsLiking(true)
+    try {
+      await toggleLike(idea.id, user.id)
+      toast({
+        title: "更新完了",
+        description: "いいねを更新しました",
+      })
+    } catch (error) {
+      toast({
+        title: "エラー",
+        description: "いいねの更新に失敗しました",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLiking(false)
     }
   }
 
@@ -95,11 +141,8 @@ export default function IdeaDetailPage() {
 
     setIsSubmitting(true)
     try {
-      addComment(idea.id, {
-        content: comment.trim(),
-        author: user.address,
-        authorNickname: user.nickname || `User_${user.address.slice(-4)}`,
-      })
+      const newComment = await addComment(idea.id, user.id, comment.trim())
+      setComments([...comments, newComment as CommentWithUser])
       setComment("")
       toast({
         title: "コメント投稿完了",
@@ -116,94 +159,153 @@ export default function IdeaDetailPage() {
     }
   }
 
-  const isLiked = user ? idea.likedBy.includes(user.address) : false
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: idea.title,
+          text: `${idea.title} - ${idea.target}`,
+          url: window.location.href,
+        })
+      } catch (error) {
+        console.log('Share cancelled')
+      }
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(window.location.href)
+      toast({
+        title: "リンクをコピーしました",
+        description: "URLをクリップボードにコピーしました",
+      })
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-background/80 backdrop-blur-sm">
+      <div className="flex items-center justify-between p-4 border-b bg-background/80 backdrop-blur-sm sticky top-0 z-10">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <h1 className="text-lg font-semibold">アイデア詳細</h1>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" onClick={handleShare}>
           <Share2 className="w-5 h-5" />
         </Button>
       </div>
 
       {/* Content */}
-      <div className="p-4 pb-20 space-y-6">
-        {/* Main Idea Card */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <Badge className={getStatusColor(idea.status)}>{getStatusLabel(idea.status)}</Badge>
-              {idea.githubRepo && <GitBranch className="w-4 h-4 text-muted-foreground" />}
+      <div className="p-4 pb-20 space-y-6 max-w-4xl mx-auto">
+        {/* Main Idea Card - Modern Design */}
+        <Card className="overflow-hidden border-0 shadow-xl">
+          <div className="absolute -top-3 -right-3 z-10">
+            <Badge className={cn(getStatusColor(idea.status), "shadow-lg px-4 py-1.5 font-medium")}>
+              {getStatusLabel(idea.status)}
+            </Badge>
+          </div>
+
+          <CardHeader className="pb-4 pt-6">
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl shadow-lg">
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+                {idea.title}
+              </CardTitle>
             </div>
-            <CardTitle className="text-xl">{idea.title}</CardTitle>
           </CardHeader>
 
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div>
-                <h4 className="font-medium text-muted-foreground mb-1">Target</h4>
-                <p>{idea.target}</p>
+          <CardContent className="space-y-6">
+            {/* Target Section */}
+            <div className="group">
+              <div className="flex items-center gap-2 mb-2">
+                <Target className="w-5 h-5 text-purple-500" />
+                <h4 className="font-semibold text-purple-600 dark:text-purple-400">Target</h4>
               </div>
-
-              <div>
-                <h4 className="font-medium text-muted-foreground mb-1">Why</h4>
-                <p>{idea.why}</p>
-              </div>
-
-              {idea.what && (
-                <div>
-                  <h4 className="font-medium text-muted-foreground mb-1">What</h4>
-                  <p>{idea.what}</p>
-                </div>
-              )}
-
-              {idea.how && (
-                <div>
-                  <h4 className="font-medium text-muted-foreground mb-1">How</h4>
-                  <p>{idea.how}</p>
-                </div>
-              )}
-
-              {idea.impact && (
-                <div>
-                  <h4 className="font-medium text-muted-foreground mb-1">Impact</h4>
-                  <p>{idea.impact}</p>
-                </div>
-              )}
+              <p className="pl-7 text-gray-700 dark:text-gray-300">{idea.target}</p>
             </div>
 
-            <div className="flex items-center justify-between pt-4 border-t">
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <User className="w-4 h-4" />
-                <span>{idea.authorNickname}</span>
+            {/* Why Section */}
+            <div className="group">
+              <div className="flex items-center gap-2 mb-2">
+                <Lightbulb className="w-5 h-5 text-yellow-500" />
+                <h4 className="font-semibold text-yellow-600 dark:text-yellow-400">Why</h4>
               </div>
-
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <Calendar className="w-4 h-4" />
-                <span>{new Date(idea.createdAt).toLocaleDateString("ja-JP")}</span>
-              </div>
+              <p className="pl-7 text-gray-700 dark:text-gray-300">{idea.why_description}</p>
             </div>
 
-            <div className="flex items-center justify-between pt-2">
-              <div className="flex items-center space-x-4">
+            {/* What Section */}
+            {idea.what_description && (
+              <div className="group">
+                <div className="flex items-center gap-2 mb-2">
+                  <Rocket className="w-5 h-5 text-green-500" />
+                  <h4 className="font-semibold text-green-600 dark:text-green-400">What</h4>
+                </div>
+                <p className="pl-7 text-gray-700 dark:text-gray-300">{idea.what_description}</p>
+              </div>
+            )}
+
+            {/* How Section */}
+            {idea.how_description && (
+              <div className="group">
+                <div className="flex items-center gap-2 mb-2">
+                  <GitBranch className="w-5 h-5 text-blue-500" />
+                  <h4 className="font-semibold text-blue-600 dark:text-blue-400">How</h4>
+                </div>
+                <p className="pl-7 text-gray-700 dark:text-gray-300">{idea.how_description}</p>
+              </div>
+            )}
+
+            {/* Impact Section */}
+            {idea.impact_description && (
+              <div className="group">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="w-5 h-5 text-orange-500" />
+                  <h4 className="font-semibold text-orange-600 dark:text-orange-400">Impact</h4>
+                </div>
+                <p className="pl-7 text-gray-700 dark:text-gray-300">{idea.impact_description}</p>
+              </div>
+            )}
+
+            {/* Author and Date */}
+            <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center shadow-md">
+                  <User className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {idea.users?.nickname || 'Anonymous'}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {new Date(idea.created_at).toLocaleDateString("ja-JP")}
+                  </p>
+                </div>
+              </div>
+
+              {/* Interaction Stats */}
+              <div className="flex items-center gap-3">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleLike}
-                  className={cn("flex items-center space-x-1", isLiked && "text-red-500")}
+                  disabled={isLiking}
+                  className={cn(
+                    "group relative overflow-hidden rounded-full px-4 py-2",
+                    "hover:bg-red-50 dark:hover:bg-red-950"
+                  )}
                 >
-                  <Heart className={cn("w-4 h-4", isLiked && "fill-current")} />
-                  <span>{idea.likes}</span>
+                  <div className="flex items-center gap-2">
+                    <Heart className={cn(
+                      "w-5 h-5 transition-all group-hover:scale-110",
+                      "group-hover:text-red-500"
+                    )} />
+                    <span className="font-medium">{idea.likes_count}</span>
+                  </div>
                 </Button>
 
-                <div className="flex items-center space-x-1 text-muted-foreground">
-                  <MessageCircle className="w-4 h-4" />
-                  <span>{idea.comments.length}</span>
+                <div className="flex items-center gap-2 px-4 py-2">
+                  <MessageCircle className="w-5 h-5" />
+                  <span className="font-medium">{idea.comments_count}</span>
                 </div>
               </div>
             </div>
@@ -211,48 +313,70 @@ export default function IdeaDetailPage() {
         </Card>
 
         {/* Comments Section */}
-        <Card>
+        <Card className="border-0 shadow-xl">
           <CardHeader>
-            <CardTitle className="text-lg">コメント ({idea.comments.length})</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <MessageCircle className="w-5 h-5" />
+              コメント ({comments.length})
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Comment Input */}
-            <div className="flex space-x-2">
+            <div className="flex gap-3">
               <Textarea
                 placeholder="コメントを入力..."
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                rows={2}
-                className="flex-1"
+                rows={3}
+                className="flex-1 resize-none"
               />
               <Button
                 onClick={handleComment}
                 disabled={isSubmitting || !comment.trim()}
                 size="icon"
-                className="self-end"
+                className="self-end bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
               >
-                <Send className="w-4 h-4" />
+                {isSubmitting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
               </Button>
             </div>
 
             {/* Comments List */}
-            <div className="space-y-3">
-              {idea.comments.map((comment) => (
-                <div key={comment.id} className="border-l-2 border-muted pl-4">
-                  <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-1">
-                    <User className="w-3 h-3" />
-                    <span>{comment.authorNickname}</span>
-                    <span>•</span>
-                    <span>{new Date(comment.createdAt).toLocaleDateString("ja-JP")}</span>
+            {loadingComments ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {comments.map((comment) => (
+                  <div key={comment.id} className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full flex items-center justify-center">
+                        <User className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">
+                          {comment.users?.nickname || 'Anonymous'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(comment.created_at).toLocaleDateString("ja-JP")}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-sm pl-10">{comment.content}</p>
                   </div>
-                  <p className="text-sm">{comment.content}</p>
-                </div>
-              ))}
+                ))}
 
-              {idea.comments.length === 0 && (
-                <p className="text-center text-muted-foreground py-8">まだコメントがありません</p>
-              )}
-            </div>
+                {comments.length === 0 && (
+                  <p className="text-center text-gray-500 py-12">
+                    まだコメントがありません
+                  </p>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

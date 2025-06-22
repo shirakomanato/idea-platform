@@ -7,8 +7,10 @@ import { Wallet, Loader2 } from "lucide-react"
 import { useAppStore } from "@/lib/store"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
+import { createClient } from "@/lib/supabase/client"
+import type { User } from "@/types/database"
 
-export function WalletConnect() {
+export function WalletConnect(): JSX.Element {
   const [isConnecting, setIsConnecting] = useState(false)
   const { setUser, setConnected } = useAppStore()
   const router = useRouter()
@@ -18,27 +20,101 @@ export function WalletConnect() {
     setIsConnecting(true)
 
     try {
-      // Metamask接続のシミュレーション
-      if (typeof window !== "undefined" && (window as any).ethereum) {
-        // 実際の実装では ThirdWeb SDK を使用
-        const accounts = await (window as any).ethereum.request({
+      if (typeof window !== "undefined" && window.ethereum) {
+        // MetaMask接続
+        const accounts = await window.ethereum.request({
           method: "eth_requestAccounts",
-        })
+        }) as string[]
 
         if (accounts.length > 0) {
-          const address = accounts[0]
-          setUser({
-            address,
-            nickname: `User_${address.slice(-4)}`,
-          })
-          setConnected(true)
+          const walletAddress = accounts[0]
+          
+          try {
+            const supabase = createClient()
+            
+            // データベースでユーザーを検索または作成
+            let { data: existingUser, error: fetchError } = await supabase
+              .from('users')
+              .select('*')
+              .eq('wallet_address', walletAddress)
+              .single()
 
-          toast({
-            title: "ウォレット接続成功",
-            description: "Metamaskに接続されました",
-          })
+            if (fetchError && fetchError.code !== 'PGRST116') {
+              console.warn('User fetch error:', fetchError)
+              // エラーが発生してもユーザー作成を試す
+            }
 
-          router.push("/dashboard")
+            let user: User
+            if (!existingUser) {
+              // 新規ユーザー作成
+              const { data: newUser, error: insertError } = await supabase
+                .from('users')
+                .insert({
+                  wallet_address: walletAddress,
+                  nickname: `User_${walletAddress.slice(-4)}`,
+                })
+                .select()
+                .single()
+
+              if (insertError) {
+                console.warn('User creation error:', insertError)
+                // データベースエラーでもローカルで続行
+                user = {
+                  id: walletAddress,
+                  wallet_address: walletAddress,
+                  nickname: `User_${walletAddress.slice(-4)}`,
+                  avatar_url: null,
+                  bio: null,
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString()
+                }
+              } else {
+                user = newUser
+              }
+            } else {
+              user = existingUser
+            }
+
+            // ユーザーコンテキストを設定（エラーでも続行）
+            try {
+              await supabase.rpc('set_current_user_wallet', { 
+                wallet_address: walletAddress 
+              })
+            } catch (rpcError) {
+              console.warn('RPC function error:', rpcError)
+            }
+
+            setUser({
+              address: user.wallet_address,
+              nickname: user.nickname || `User_${walletAddress.slice(-4)}`,
+              id: user.id,
+            })
+            setConnected(true)
+
+            toast({
+              title: "ウォレット接続成功",
+              description: "Metamaskに接続されました",
+            })
+
+            router.push("/dashboard")
+          } catch (dbError) {
+            console.warn('Database error, proceeding with local user:', dbError)
+            
+            // データベースエラーでもローカルユーザーで続行
+            setUser({
+              address: walletAddress,
+              nickname: `User_${walletAddress.slice(-4)}`,
+              id: walletAddress,
+            })
+            setConnected(true)
+
+            toast({
+              title: "ウォレット接続成功",
+              description: "Metamaskに接続されました（ローカルモード）",
+            })
+
+            router.push("/dashboard")
+          }
         }
       } else {
         toast({
@@ -47,10 +123,20 @@ export function WalletConnect() {
           variant: "destructive",
         })
       }
-    } catch (error) {
+    } catch (error: unknown) {
+      console.error('Wallet connection error:', error)
+      
+      let errorMessage = "ウォレットの接続に失敗しました"
+      
+      if (error instanceof Error) {
+        errorMessage = error.message
+      } else if (typeof error === 'string') {
+        errorMessage = error
+      }
+      
       toast({
         title: "接続エラー",
-        description: "ウォレットの接続に失敗しました",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {

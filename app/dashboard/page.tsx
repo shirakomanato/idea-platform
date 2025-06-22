@@ -1,28 +1,44 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useAppStore } from "@/lib/store"
 import { SwipeCard } from "@/components/swipe-card"
 import { BottomNavigation } from "@/components/bottom-navigation"
 import { Button } from "@/components/ui/button"
-import { Plus, Menu, Sparkles } from "lucide-react"
+import { Plus, Menu, Sparkles, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
+import { useIdeas } from "@/lib/supabase/hooks"
+import { useToast } from "@/hooks/use-toast"
 
-export default function DashboardPage() {
-  const { ideas, currentIdeaIndex, setCurrentIdeaIndex, user, currentFilter } = useAppStore()
-  const [isLoading, setIsLoading] = useState(true)
+function DashboardContent() {
+  const { currentIdeaIndex, setCurrentIdeaIndex, user, currentFilter } = useAppStore()
+  const { ideas: supabaseIdeas, loading, error } = useIdeas()
   const router = useRouter()
+  const { toast } = useToast()
 
   useEffect(() => {
     if (!user) {
       router.push("/connect")
       return
     }
-    setIsLoading(false)
   }, [user, router])
 
-  const filteredIdeas = ideas.filter((idea) => {
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "エラー",
+        description: "データの取得に失敗しました",
+        variant: "destructive",
+      })
+    }
+  }, [error, toast])
+
+
+  // Supabaseのアイデアを使用
+  const allIdeas = supabaseIdeas
+  
+  const filteredIdeas = allIdeas.filter((idea) => {
     if (currentFilter === "all") return true
     if (currentFilter === "proposal") {
       return ["commit", "in-progress", "test", "finish"].includes(idea.status)
@@ -54,10 +70,13 @@ export default function DashboardPage() {
     }
   }
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+          <p className="text-sm text-muted-foreground">アイデアを読み込み中...</p>
+        </div>
       </div>
     )
   }
@@ -83,24 +102,54 @@ export default function DashboardPage() {
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center p-4 pb-20">
         {filteredIdeas.length > 0 ? (
-          <div className="w-full max-w-sm">
-            {currentIdea && (
-              <SwipeCard idea={currentIdea} onSwipeLeft={handleSwipeLeft} onSwipeRight={handleSwipeRight} />
-            )}
-
-            {/* Swipe Instructions */}
-            <div className="mt-6 flex items-center justify-between text-sm text-muted-foreground">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                  <span className="text-red-600">←</span>
+          <div className="w-full max-w-md">
+            <div className="relative">
+              {/* Background cards for stack effect */}
+              {filteredIdeas.slice(currentIdeaIndex + 1, currentIdeaIndex + 3).map((idea, index) => (
+                <div
+                  key={idea.id}
+                  className="absolute inset-0"
+                  style={{
+                    transform: `scale(${0.95 - index * 0.05}) translateY(${(index + 1) * 8}px)`,
+                    opacity: 0.5 - index * 0.2,
+                    zIndex: -index - 1,
+                  }}
+                >
+                  <SwipeCard idea={idea} className="pointer-events-none" />
                 </div>
-                <span>推薦</span>
+              ))}
+              
+              {/* Current card */}
+              {currentIdea && (
+                <SwipeCard idea={currentIdea} onSwipeLeft={handleSwipeLeft} onSwipeRight={handleSwipeRight} />
+              )}
+            </div>
+            
+            {/* Swipe Instructions - Modern Design */}
+            <div className="mt-8 flex items-center justify-between px-4">
+              <div className="flex items-center space-x-3">
+                <div className="relative">
+                  <div className="w-12 h-12 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center shadow-lg transform hover:scale-110 transition-transform">
+                    <span className="text-white font-bold text-lg">←</span>
+                  </div>
+                  <div className="absolute -inset-1 bg-red-400 rounded-full blur-md opacity-40"></div>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-800 dark:text-white">推薦</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">他の人に紹介</p>
+                </div>
               </div>
 
-              <div className="flex items-center space-x-2">
-                <span>共感</span>
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <span className="text-green-600">→</span>
+              <div className="flex items-center space-x-3">
+                <div>
+                  <p className="text-sm font-semibold text-gray-800 dark:text-white text-right">共感</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 text-right">いいね！</p>
+                </div>
+                <div className="relative">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg transform hover:scale-110 transition-transform">
+                    <span className="text-white font-bold text-lg">→</span>
+                  </div>
+                  <div className="absolute -inset-1 bg-green-400 rounded-full blur-md opacity-40"></div>
                 </div>
               </div>
             </div>
@@ -132,5 +181,20 @@ export default function DashboardPage() {
 
       <BottomNavigation />
     </div>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+          <p className="text-sm text-muted-foreground">読み込み中...</p>
+        </div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   )
 }

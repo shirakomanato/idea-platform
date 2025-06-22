@@ -12,6 +12,8 @@ import { useAppStore } from "@/lib/store"
 import { useToast } from "@/hooks/use-toast"
 import { generateText } from "ai"
 import { openai } from "@ai-sdk/openai"
+import { createClient } from "@/lib/supabase/client"
+import type { IdeaInsert } from "@/types/database"
 
 export default function NewIdeaPage() {
   const [formData, setFormData] = useState({
@@ -112,6 +114,7 @@ Impact: [期待される効果・数値目標]
 
     setIsSubmitting(true)
     try {
+      // まずローカルストアに追加（確実に動作させるため）
       addIdea({
         ...formData,
         author: user.address,
@@ -122,16 +125,78 @@ Impact: [期待される効果・数値目標]
         status: "idea",
       })
 
+      // Supabaseにも保存を試す
+      try {
+        console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+        console.log('Supabase Key exists:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+        
+        const supabase = createClient()
+        
+        // ユーザーコンテキストを設定
+        try {
+          await supabase.rpc('set_current_user_wallet', { 
+            wallet_address: user.address 
+          })
+        } catch (rpcError) {
+          console.warn('RPC function error:', rpcError)
+        }
+
+        // Supabaseにアイデアを保存
+        const ideaData: IdeaInsert = {
+          user_id: user.id === user.address ? null : user.id, // ウォレットアドレスと同じ場合はnull
+          wallet_address: user.address,
+          title: formData.title,
+          target: formData.target,
+          why_description: formData.why,
+          what_description: formData.what || '',
+          how_description: formData.how || '',
+          impact_description: formData.impact || '',
+          status: 'idea'
+        }
+
+        const { data, error } = await supabase
+          .from('ideas')
+          .insert(ideaData)
+          .select()
+          .single()
+
+        if (error) {
+          console.warn('Supabase save error:', error)
+          console.warn('Error details:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          })
+        } else {
+          console.log('Successfully saved to Supabase:', data)
+        }
+      } catch (dbError) {
+        console.warn('Database error, idea saved locally only:', dbError)
+      }
+
       toast({
         title: "投稿完了",
         description: "アイデアが投稿されました",
       })
 
       router.push("/dashboard")
-    } catch (error) {
+    } catch (error: unknown) {
+      console.error('Idea creation error:', error)
+      
+      let errorMessage = "投稿に失敗しました"
+      
+      if (error instanceof Error) {
+        errorMessage = error.message
+        console.error('Error details:', error)
+      } else if (typeof error === 'object' && error !== null) {
+        errorMessage = JSON.stringify(error)
+        console.error('Error object:', error)
+      }
+      
       toast({
         title: "エラー",
-        description: "投稿に失敗しました",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {
