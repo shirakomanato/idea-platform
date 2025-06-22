@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Heart, MessageCircle, Share2, User, Calendar, GitBranch, Sparkles, Target, Lightbulb, Rocket } from "lucide-react"
 import { type Idea, useAppStore } from "@/lib/store"
 import type { IdeaWithUser } from "@/types/database"
-import { toggleLike } from "@/lib/supabase/actions"
+import { toggleLike, getUserLikeStatus } from "@/lib/supabase/actions"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
@@ -22,6 +22,7 @@ interface SwipeCardProps {
 export function SwipeCard({ idea, onSwipeLeft, onSwipeRight, className }: SwipeCardProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState(0)
+  const [currentLikeStatus, setCurrentLikeStatus] = useState(false)
   const { user, likeIdea } = useAppStore()
   const router = useRouter()
 
@@ -74,22 +75,47 @@ export function SwipeCard({ idea, onSwipeLeft, onSwipeRight, className }: SwipeC
   const { toast } = useToast()
   const [isLiking, setIsLiking] = useState(false)
 
+  // データ形式の違いに対応
+  const isSupabaseIdea = 'users' in idea
+
+  // いいね状態を取得
+  useEffect(() => {
+    if (user && isSupabaseIdea) {
+      getUserLikeStatus(idea.id, user.address).then(({ liked }) => {
+        setCurrentLikeStatus(liked)
+      })
+    }
+  }, [idea.id, user, isSupabaseIdea])
+
   const handleLike = async () => {
-    if (!user) return
+    if (!user) {
+      toast({
+        title: "エラー",
+        description: "ログインが必要です",
+        variant: "destructive",
+      })
+      return
+    }
     
     setIsLiking(true)
     try {
       if (isSupabaseIdea) {
-        await toggleLike(idea.id, user.id)
-        // リアルタイム更新のために親コンポーネントに通知する必要があります
+        const result = await toggleLike(idea.id, user.address)
+        setCurrentLikeStatus(result.liked)
+        
         toast({
-          title: "いいね更新",
-          description: isLiked ? "いいねを取り消しました" : "いいねしました",
+          title: "✨ いいね更新",
+          description: result.liked ? "いいねしました" : "いいねを取り消しました",
         })
       } else {
         likeIdea(idea.id, user.address)
+        toast({
+          title: "✨ いいね",
+          description: "いいねしました",
+        })
       }
     } catch (error) {
+      console.error('Like error:', error)
       toast({
         title: "エラー",
         description: "いいねの更新に失敗しました",
@@ -104,9 +130,8 @@ export function SwipeCard({ idea, onSwipeLeft, onSwipeRight, className }: SwipeC
     router.push(`/idea/${idea.id}`)
   }
 
-  // データ形式の違いに対応
-  const isSupabaseIdea = 'users' in idea
-  const isLiked = user ? (isSupabaseIdea ? false : (idea as Idea).likedBy.includes(user.address)) : false
+  // いいね状態の取得
+  const isLiked = user ? (isSupabaseIdea ? currentLikeStatus : (idea as Idea).likedBy.includes(user.address)) : false
   const likesCount = isSupabaseIdea ? (idea as IdeaWithUser).likes_count : (idea as Idea).likes
   const authorNickname = isSupabaseIdea ? (idea as IdeaWithUser).users.nickname || 'Anonymous' : (idea as Idea).authorNickname
   const whyText = isSupabaseIdea ? (idea as IdeaWithUser).why_description : (idea as Idea).why

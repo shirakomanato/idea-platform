@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { useIdeas } from "@/lib/supabase/hooks"
 import { useToast } from "@/hooks/use-toast"
+import { toggleLike } from "@/lib/supabase/actions"
 
 function DashboardContent() {
   const { currentIdeaIndex, setCurrentIdeaIndex, user, currentFilter } = useAppStore()
@@ -48,16 +49,39 @@ function DashboardContent() {
 
   const currentIdea = filteredIdeas[currentIdeaIndex]
 
-  const handleSwipeLeft = () => {
-    // 他者推薦機能（今後実装）
-    console.log("Swiped left - recommend to others")
+  const handleSwipeLeft = async () => {
+    // 他者推薦機能
+    if (user && currentIdea) {
+      toast({
+        title: "💪 推薦",
+        description: "このアイデアを他の人に推薦しました",
+      })
+      console.log(`Recommended idea ${currentIdea.id} by ${user.address}`)
+      // TODO: 推薦機能のSupabase実装を追加
+    }
     nextIdea()
   }
 
-  const handleSwipeRight = () => {
-    // Like機能
+  const handleSwipeRight = async () => {
+    // Like機能 - 共感
     if (user && currentIdea) {
-      useAppStore.getState().likeIdea(currentIdea.id, user.address)
+      try {
+        const userIdToUse = user.address
+        await toggleLike(currentIdea.id, userIdToUse)
+        
+        toast({
+          title: "✨ 共感",
+          description: "このアイデアに共感しました！",
+        })
+        console.log(`Liked idea ${currentIdea.id} by ${user.address}`)
+      } catch (error) {
+        console.error('Error liking idea:', error)
+        toast({
+          title: "エラー",
+          description: "いいねに失敗しました",
+          variant: "destructive",
+        })
+      }
     }
     nextIdea()
   }

@@ -1,0 +1,86 @@
+
+> idea-platform@0.1.0 dev /Users/shiraikoutarou/idea-platform
+> next dev
+
+   ▲ Next.js 15.2.4
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.3.245:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1200ms
+ ✓ Compiled /middleware in 166ms (218 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 1315ms (800 modules)
+ HEAD / 200 in 1464ms
+ ✓ Compiled in 377ms (358 modules)
+ GET / 200 in 41ms
+ ○ Compiling /connect ...
+ ✓ Compiled /connect in 661ms (991 modules)
+ GET /connect 200 in 715ms
+ ✓ Compiled /dashboard in 321ms (1038 modules)
+ GET /dashboard 200 in 365ms
+ ✓ Compiled /idea/new in 405ms (1242 modules)
+ GET /idea/new 200 in 454ms
+ ✓ Compiled in 307ms (1251 modules)
+ GET /idea/new 200 in 45ms
+ ✓ Compiled in 223ms (1251 modules)
+ GET /idea/new 200 in 32ms
+ GET /idea/new 200 in 119ms
+ ✓ Compiled in 186ms (562 modules)
+   Reload env: .env.local
+ GET /idea/new 200 in 121ms
+ ✓ Compiled in 507ms (1455 modules)
+ GET /idea/new 200 in 42ms
+ ✓ Compiled in 100ms (562 modules)
+ GET /idea/new 200 in 9ms
+   Reload env: .env.local
+ ✓ Compiled in 173ms (1455 modules)
+ GET /idea/new 200 in 33ms
+ ✓ Compiled in 178ms (562 modules)
+   Reload env: .env.local
+ GET /idea/new 200 in 22ms
+ ✓ Compiled in 201ms (1455 modules)
+ GET /idea/new 200 in 170ms
+ GET /idea/new 200 in 40ms
+ GET /dashboard 200 in 40ms
+ GET /connect 200 in 10ms
+ GET /dashboard 200 in 8ms
+ GET /idea/new 200 in 11ms
+ GET /idea/new 200 in 32ms
+ ✓ Compiled in 412ms (1455 modules)
+ GET /idea/new 200 in 213ms
+ GET /idea/new 200 in 9ms
+ ✓ Compiled in 416ms (1066 modules)
+ GET /idea/new 200 in 25ms
+ ✓ Compiled in 199ms (1066 modules)
+ GET /idea/new 200 in 36ms
+ GET /idea/new 200 in 122ms
+ ✓ Compiled /api/generate-idea in 484ms (1114 modules)
+AI生成エラー: Error [AI_APICallError]: Incorrect API key provided: sk-proj-******************************************************************************************************************************************************gxaw. You can find your API key at https://platform.openai.com/account/api-keys.
+    at async POST (app/api/generate-idea/route.ts:51:21)
+  49 |
+  50 |     // OpenAI API呼び出し
+> 51 |     const { text } = await generateText({
+     |                     ^
+  52 |       model: openai('gpt-4o'),
+  53 |       prompt,
+  54 |       maxTokens: 800, {
+  cause: undefined,
+  url: 'https://api.openai.com/v1/chat/completions',
+  requestBodyValues: [Object],
+  statusCode: 401,
+  responseHeaders: [Object],
+  responseBody: '{\n' +
+    '    "error": {\n' +
+    '        "message": "Incorrect API key provided: sk-proj-******************************************************************************************************************************************************gxaw. You can find your API key at https://platform.openai.com/account/api-keys.",\n' +
+    '        "type": "invalid_request_error",\n' +
+    '        "param": null,\n' +
+    '        "code": "invalid_api_key"\n' +
+    '    }\n' +
+    '}\n',
+  isRetryable: false,
+  data: [Object]
+}
+ POST /api/generate-idea 500 in 957ms
+[?25h

@@ -1,11 +1,70 @@
 import { createClient } from './client'
 import type { CommentInsert, LikeInsert } from '@/types/database'
 
-// いいね機能
-export async function toggleLike(ideaId: string, userId: string) {
+// ユーザーのいいね状態を取得
+export async function getUserLikeStatus(ideaId: string, walletAddress: string) {
   const supabase = createClient()
   
   try {
+    // ウォレットアドレスからユーザーIDを取得
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('wallet_address', walletAddress)
+      .single()
+
+    if (userError || !userData) {
+      return { liked: false }
+    }
+
+    // いいね状態をチェック
+    const { data: existingLike, error: checkError } = await supabase
+      .from('likes')
+      .select('id')
+      .eq('idea_id', ideaId)
+      .eq('user_id', userData.id)
+      .single()
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      throw checkError
+    }
+
+    return { liked: !!existingLike }
+  } catch (error) {
+    console.error('Error checking like status:', error)
+    return { liked: false }
+  }
+}
+
+// いいね機能
+export async function toggleLike(ideaId: string, walletAddress: string) {
+  const supabase = createClient()
+  
+  try {
+    // ウォレットアドレスからユーザーIDを取得
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('wallet_address', walletAddress)
+      .single()
+
+    if (userError || !userData) {
+      // ユーザーが存在しない場合は作成
+      const { data: newUser, error: createError } = await supabase
+        .from('users')
+        .insert({
+          wallet_address: walletAddress,
+          nickname: `User_${walletAddress.slice(-4)}`
+        })
+        .select('id')
+        .single()
+
+      if (createError) throw createError
+      userData = newUser
+    }
+
+    const userId = userData.id
+
     // 既存のいいねをチェック
     const { data: existingLike, error: checkError } = await supabase
       .from('likes')

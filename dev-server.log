@@ -1,0 +1,133 @@
+
+> idea-platform@0.1.0 dev /Users/shiraikoutarou/idea-platform
+> next dev
+
+   ▲ Next.js 15.2.4
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.3.245:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1253ms
+ ✓ Compiled /middleware in 155ms (218 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 1095ms (800 modules)
+ HEAD / 200 in 1248ms
+ ✓ Compiled in 204ms (358 modules)
+ ✓ Compiled in 55ms (358 modules)
+ GET / 200 in 23ms
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 737ms (1038 modules)
+ GET /dashboard 200 in 732ms
+ GET /connect 200 in 800ms
+ ✓ Compiled /idea/new in 405ms (1057 modules)
+ GET /idea/new 200 in 451ms
+ ✓ Compiled /api/generate-idea in 287ms (1119 modules)
+API Key exists: true
+API Key length: 162
+API Key starts with sk-: true
+AI生成エラー: Error [AI_APICallError]: Incorrect API key provided: sk-proj-******************************************************************************************************************************************************gxaw. You can find your API key at https://platform.openai.com/account/api-keys.
+    at async POST (app/api/generate-idea/route.ts:63:21)
+  61 |
+  62 |     // OpenAI API呼び出し
+> 63 |     const { text } = await generateText({
+     |                     ^
+  64 |       model: openai('gpt-4o'),
+  65 |       prompt,
+  66 |       maxTokens: 800, {
+  cause: undefined,
+  url: 'https://api.openai.com/v1/chat/completions',
+  requestBodyValues: [Object],
+  statusCode: 401,
+  responseHeaders: [Object],
+  responseBody: '{\n' +
+    '    "error": {\n' +
+    '        "message": "Incorrect API key provided: sk-proj-******************************************************************************************************************************************************gxaw. You can find your API key at https://platform.openai.com/account/api-keys.",\n' +
+    '        "type": "invalid_request_error",\n' +
+    '        "param": null,\n' +
+    '        "code": "invalid_api_key"\n' +
+    '    }\n' +
+    '}\n',
+  isRetryable: false,
+  data: [Object]
+}
+ POST /api/generate-idea 500 in 713ms
+ ✓ Compiled in 178ms (470 modules)
+   Reload env: .env.local
+ GET /idea/new 200 in 43ms
+ ✓ Compiled in 161ms (1238 modules)
+ ✓ Compiled /api/generate-idea in 77ms (626 modules)
+API Key exists: true
+API Key length: 164
+API Key starts with sk-: true
+ POST /api/generate-idea 200 in 5775ms
+ ✓ Compiled /dashboard in 81ms (650 modules)
+ GET /dashboard 200 in 120ms
+ GET /dashboard 200 in 9ms
+ ✓ Compiled /idea/[id] in 351ms (1118 modules)
+ GET /idea/29583957-4470-49d6-bcc8-bd6f26689c20 200 in 715ms
+ GET /idea/29583957-4470-49d6-bcc8-bd6f26689c20 200 in 16ms
+ ✓ Compiled /pre-drafts in 293ms (1127 modules)
+ GET /pre-drafts 200 in 331ms
+ GET /idea/2 200 in 17ms
+ GET /dashboard 200 in 15ms
+ ✓ Compiled /proposals in 253ms (1136 modules)
+ GET /proposals 200 in 290ms
+ ✓ Compiled /me in 314ms (1152 modules)
+ GET /me 200 in 337ms
+ GET /dashboard 200 in 14ms
+ GET /idea/29583957-4470-49d6-bcc8-bd6f26689c20 200 in 20ms
+ ✓ Compiled in 531ms (1092 modules)
+ GET /dashboard 200 in 67ms
+ ✓ Compiled /pre-drafts in 111ms (612 modules)
+ GET /pre-drafts 200 in 143ms
+ GET /pre-drafts 200 in 6ms
+ GET /idea/2 200 in 19ms
+ GET /dashboard 200 in 15ms
+ GET /idea/new 200 in 15ms
+ ✓ Compiled /api/generate-idea in 103ms (674 modules)
+API Key exists: true
+API Key length: 164
+API Key starts with sk-: true
+ POST /api/generate-idea 200 in 4539ms
+API Key exists: true
+API Key length: 164
+API Key starts with sk-: true
+ POST /api/generate-idea 200 in 4866ms
+ GET /dashboard 200 in 39ms
+ GET /dashboard 200 in 12ms
+ GET /pre-drafts 200 in 15ms
+ ✓ Compiled /proposals in 204ms (680 modules)
+ GET /proposals 200 in 246ms
+ GET /me 200 in 16ms
+ GET /proposals 200 in 8ms
+ GET /pre-drafts 200 in 11ms
+ GET /idea/2 200 in 19ms
+ GET /dashboard 200 in 12ms
+ GET /proposals 200 in 8ms
+ GET /me 200 in 8ms
+ GET /proposals 200 in 9ms
+ GET /pre-drafts 200 in 10ms
+ GET /proposals 200 in 9ms
+ GET /me 200 in 9ms
+ GET /idea/1750591258238 200 in 11ms
+ GET /dashboard 200 in 10ms
+ GET /pre-drafts 200 in 25ms
+ GET /dashboard 200 in 10ms
+ GET /pre-drafts 200 in 12ms
+ GET /proposals 200 in 10ms
+ GET /me 200 in 9ms
+ GET /dashboard 200 in 9ms
+ GET /pre-drafts 200 in 10ms
+ GET /proposals 200 in 8ms
+ GET /me 200 in 8ms
+ GET /dashboard 200 in 10ms
+ ✓ Compiled in 383ms (1092 modules)
+ GET /dashboard 200 in 58ms
+ ✓ Compiled in 78ms (486 modules)
+ GET /dashboard 200 in 9ms
+ ✓ Compiled in 70ms (486 modules)
+ GET /dashboard 200 in 7ms
+ ✓ Compiled in 87ms (486 modules)
+ GET /dashboard 200 in 8ms
+[?25h
