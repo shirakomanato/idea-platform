@@ -18,7 +18,15 @@ export function createClient() {
   }
   
   try {
-    const client = createBrowserClient(supabaseUrl, supabaseAnonKey)
+    const client = createBrowserClient(supabaseUrl, supabaseAnonKey, {
+      // Ensure proper headers for RLS
+      global: {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      },
+    })
     console.log('Supabase client created successfully')
     return client
   } catch (error) {

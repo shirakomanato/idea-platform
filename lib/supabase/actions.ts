@@ -1,5 +1,6 @@
 import { createClient } from './client'
 import type { CommentInsert, LikeInsert } from '@/types/database'
+import { LikesHelper } from './likes-helper'
 
 // 推薦機能
 export async function recommendIdea(ideaId: string, walletAddress: string) {
@@ -53,11 +54,21 @@ export async function empathizeWithIdea(ideaId: string, walletAddress: string) {
       console.log('Already in empathized list:', ideaId)
     }
 
-    // Supabaseのいいね機能を試す（失敗してもエラーにしない）
+    // Use the new LikesHelper for better error handling
     try {
-      const likeResult = await toggleLike(ideaId, walletAddress)
-      console.log('toggleLike result:', likeResult)
-      return { liked: true, empathized: true, likesCount: likeResult.likesCount || 0 }
+      const likeResult = await LikesHelper.toggleLike({ ideaId, walletAddress })
+      console.log('LikesHelper.toggleLike result:', likeResult)
+      
+      if (likeResult.success) {
+        return { 
+          liked: likeResult.liked || true, 
+          empathized: true, 
+          likesCount: likeResult.likesCount || 0 
+        }
+      } else {
+        console.warn('Like operation failed:', likeResult.error)
+        return { liked: true, empathized: true, likesCount: 0 }
+      }
     } catch (likeError) {
       console.warn('Supabase like failed, but empathy recorded locally:', likeError)
       return { liked: true, empathized: true, likesCount: 0 }
@@ -106,159 +117,24 @@ export function getEmpathizedIdeas(walletAddress: string): string[] {
 
 // ユーザーのいいね状態を取得
 export async function getUserLikeStatus(ideaId: string, walletAddress: string) {
-  const supabase = createClient()
-  
-  try {
-    // まずウォレットアドレスを設定（RLSポリシー用）
-    const { error: walletError } = await supabase.rpc('set_current_user_wallet', { 
-      wallet_address: walletAddress 
-    })
-    
-    if (walletError) {
-      console.error('Error setting wallet:', walletError)
-      return { liked: false }
-    }
-    // ウォレットアドレスからユーザーIDを取得
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('wallet_address', walletAddress)
-      .single()
-
-    if (userError || !userData) {
-      return { liked: false }
-    }
-
-    // いいね状態をチェック
-    const { data: existingLike, error: checkError } = await supabase
-      .from('likes')
-      .select('id')
-      .eq('idea_id', ideaId)
-      .eq('user_id', userData.id)
-      .single()
-
-    if (checkError && checkError.code !== 'PGRST116') {
-      throw checkError
-    }
-
-    return { liked: !!existingLike }
-  } catch (error) {
-    console.error('Error checking like status:', error)
-    return { liked: false }
-  }
+  const result = await LikesHelper.checkLikeStatus({ ideaId, walletAddress })
+  return { liked: result.liked || false }
 }
 
 // いいね機能
 export async function toggleLike(ideaId: string, walletAddress: string) {
-  const supabase = createClient()
-  
-  if (!supabase) {
-    throw new Error('Supabase client not available')
-  }
-  
   console.log('toggleLike called with:', { ideaId, walletAddress })
   
-  try {
-    // まずウォレットアドレスを設定（RLSポリシー用）
-    console.log('Setting current user wallet:', walletAddress)
-    const { error: walletError } = await supabase.rpc('set_current_user_wallet', { 
-      wallet_address: walletAddress 
-    })
-    
-    if (walletError) {
-      console.error('Error setting wallet:', walletError)
-      throw new Error('Failed to set wallet: ' + walletError.message)
-    }
-    // ウォレットアドレスからユーザーIDを取得
-    let { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('wallet_address', walletAddress)
-      .single()
-
-    if (userError || !userData) {
-      // ユーザーが存在しない場合は作成
-      const { data: newUser, error: createError } = await supabase
-        .from('users')
-        .insert({
-          wallet_address: walletAddress,
-          nickname: `User_${walletAddress.slice(-4)}`
-        })
-        .select('id')
-        .single()
-
-      if (createError) throw createError
-      userData = newUser
-    }
-
-    const userId = userData.id
-
-    // 既存のいいねをチェック
-    const { data: existingLike, error: checkError } = await supabase
-      .from('likes')
-      .select('id')
-      .eq('idea_id', ideaId)
-      .eq('user_id', userId)
-      .single()
-
-    if (checkError && checkError.code !== 'PGRST116') {
-      throw checkError
-    }
-
-    let liked = false
-    
-    if (existingLike) {
-      // いいねを削除
-      const { error: deleteError } = await supabase
-        .from('likes')
-        .delete()
-        .eq('id', existingLike.id)
-
-      if (deleteError) throw deleteError
-      liked = false
-    } else {
-      // いいねを追加
-      const likeData: LikeInsert = {
-        idea_id: ideaId,
-        user_id: userId
-      }
-
-      const { error: insertError } = await supabase
-        .from('likes')
-        .insert(likeData)
-
-      if (insertError) throw insertError
-      liked = true
-    }
-
-    // likes_countを更新
-    const { data: currentIdea } = await supabase
-      .from('ideas')
-      .select('likes_count')
-      .eq('id', ideaId)
-      .single()
-
-    const newCount = (currentIdea?.likes_count || 0) + (liked ? 1 : -1)
-    
-    await supabase
-      .from('ideas')
-      .update({ likes_count: Math.max(0, newCount) })
-      .eq('id', ideaId)
-
-    return { liked, likesCount: Math.max(0, newCount) }
-  } catch (error) {
-    console.error('Error toggling like raw:', error)
-    console.error('Error type:', typeof error)
-    console.error('Error constructor:', error?.constructor?.name)
-    console.error('Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      errorString: String(error),
-      errorJSON: JSON.stringify(error),
-      ideaId,
-      walletAddress
-    })
-    throw error
+  const result = await LikesHelper.toggleLike({ ideaId, walletAddress })
+  
+  if (!result.success) {
+    console.error('toggleLike failed:', result.error)
+    throw new Error(result.error || 'Failed to toggle like')
+  }
+  
+  return { 
+    liked: result.liked || false, 
+    likesCount: result.likesCount || 0 
   }
 }
 
