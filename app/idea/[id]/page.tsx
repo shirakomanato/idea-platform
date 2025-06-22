@@ -41,7 +41,7 @@ export default function IdeaDetailPage() {
 
   const loadComments = async () => {
     try {
-      const data = await getComments(params.id as string)
+      const data = await getComments(params.id as string, user?.address)
       setComments(data as CommentWithUser[])
     } catch (error) {
       console.error('Error loading comments:', error)
@@ -120,7 +120,7 @@ export default function IdeaDetailPage() {
     
     setIsLiking(true)
     try {
-      await toggleLike(idea.id, user.id)
+      await toggleLike(idea.id, user.address)
       toast({
         title: "更新完了",
         description: "いいねを更新しました",
@@ -141,7 +141,7 @@ export default function IdeaDetailPage() {
 
     setIsSubmitting(true)
     try {
-      const newComment = await addComment(idea.id, user.id, comment.trim())
+      const newComment = await addComment(idea.id, user.address, comment.trim())
       setComments([...comments, newComment as CommentWithUser])
       setComment("")
       toast({

@@ -17,9 +17,10 @@ interface SwipeCardProps {
   onSwipeLeft?: () => void
   onSwipeRight?: () => void
   className?: string
+  onLikeUpdate?: (ideaId: string, liked: boolean, newCount: number) => void
 }
 
-export function SwipeCard({ idea, onSwipeLeft, onSwipeRight, className }: SwipeCardProps) {
+export function SwipeCard({ idea, onSwipeLeft, onSwipeRight, className, onLikeUpdate }: SwipeCardProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState(0)
   const [currentLikeStatus, setCurrentLikeStatus] = useState(false)
@@ -100,13 +101,32 @@ export function SwipeCard({ idea, onSwipeLeft, onSwipeRight, className }: SwipeC
     setIsLiking(true)
     try {
       if (isSupabaseIdea) {
-        const result = await toggleLike(idea.id, user.address)
-        setCurrentLikeStatus(result.liked)
+        console.log('Attempting to toggle like for Supabase idea:', { ideaId: idea.id, userAddress: user.address })
         
-        toast({
-          title: "✨ いいね更新",
-          description: result.liked ? "いいねしました" : "いいねを取り消しました",
-        })
+        try {
+          const result = await toggleLike(idea.id, user.address)
+          setCurrentLikeStatus(result.liked)
+          
+          // 親コンポーネントに更新を通知
+          if (onLikeUpdate && 'likesCount' in result) {
+            onLikeUpdate(idea.id, result.liked, result.likesCount)
+          }
+          
+          toast({
+            title: "✨ いいね更新",
+            description: result.liked ? "いいねしました" : "いいねを取り消しました",
+          })
+        } catch (supabaseError) {
+          console.warn('Supabase like failed, falling back to local store:', supabaseError)
+          // Supabase に失敗した場合はローカルストレージにフォールバック
+          likeIdea(idea.id, user.address)
+          setCurrentLikeStatus(!currentLikeStatus)
+          
+          toast({
+            title: "✨ いいね (ローカル)",
+            description: "いいねしました（ローカル保存）",
+          })
+        }
       } else {
         likeIdea(idea.id, user.address)
         toast({
@@ -115,10 +135,24 @@ export function SwipeCard({ idea, onSwipeLeft, onSwipeRight, className }: SwipeC
         })
       }
     } catch (error) {
-      console.error('Like error:', error)
+      console.error('Like error raw:', error)
+      console.error('Like error type:', typeof error)
+      console.error('Like error constructor:', error?.constructor?.name)
+      
+      const errorMessage = error instanceof Error ? error.message : 'いいねの更新に失敗しました'
+      console.error('SwipeCard like error details:', {
+        errorMessage,
+        errorString: String(error),
+        errorJSON: JSON.stringify(error),
+        ideaId: idea.id,
+        userAddress: user?.address,
+        isSupabaseIdea,
+        hasUser: !!user
+      })
+      
       toast({
         title: "エラー",
-        description: "いいねの更新に失敗しました",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {
@@ -128,6 +162,69 @@ export function SwipeCard({ idea, onSwipeLeft, onSwipeRight, className }: SwipeC
 
   const handleCardClick = () => {
     router.push(`/idea/${idea.id}`)
+  }
+
+  // スワイプ機能のイベントハンドラー
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return // 左クリックのみ
+    setIsDragging(true)
+    const startX = e.clientX
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaX = e.clientX - startX
+      setDragOffset(deltaX)
+    }
+    
+    const handleMouseUp = (e: MouseEvent) => {
+      const deltaX = e.clientX - startX
+      setIsDragging(false)
+      setDragOffset(0)
+      
+      if (Math.abs(deltaX) > 100) {
+        if (deltaX < 0 && onSwipeLeft) {
+          onSwipeLeft()
+        } else if (deltaX > 0 && onSwipeRight) {
+          onSwipeRight()
+        }
+      }
+      
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+    
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+  }
+
+  // タッチイベントハンドラー
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setIsDragging(true)
+    const startX = e.touches[0].clientX
+    
+    const handleTouchMove = (e: TouchEvent) => {
+      const deltaX = e.touches[0].clientX - startX
+      setDragOffset(deltaX)
+    }
+    
+    const handleTouchEnd = (e: TouchEvent) => {
+      const deltaX = e.changedTouches[0].clientX - startX
+      setIsDragging(false)
+      setDragOffset(0)
+      
+      if (Math.abs(deltaX) > 100) {
+        if (deltaX < 0 && onSwipeLeft) {
+          onSwipeLeft()
+        } else if (deltaX > 0 && onSwipeRight) {
+          onSwipeRight()
+        }
+      }
+      
+      document.removeEventListener('touchmove', handleTouchMove)
+      document.removeEventListener('touchend', handleTouchEnd)
+    }
+    
+    document.addEventListener('touchmove', handleTouchMove)
+    document.addEventListener('touchend', handleTouchEnd)
   }
 
   // いいね状態の取得
@@ -151,7 +248,9 @@ export function SwipeCard({ idea, onSwipeLeft, onSwipeRight, className }: SwipeC
         transform: `translateX(${dragOffset}px) rotate(${dragOffset * 0.1}deg) perspective(1000px)`,
         boxShadow: "0 20px 40px -10px rgba(0, 0, 0, 0.2), 0 10px 25px -5px rgba(0, 0, 0, 0.1)",
       }}
-      onClick={handleCardClick}
+      onClick={!isDragging ? handleCardClick : undefined}
+      onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
     >
       {/* Status Badge - Floating Design */}
       <div className="absolute -top-3 -right-3 z-10">

@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Lightbulb, FileText, Rocket, User } from "lucide-react"
+import { Lightbulb, FileText, Rocket, User, Heart } from "lucide-react"
 import { useAppStore } from "@/lib/store"
 import { useRouter, usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -25,6 +25,13 @@ export function BottomNavigation() {
       icon: FileText,
       path: "/pre-drafts",
       filter: "pre-draft" as const,
+    },
+    {
+      id: "empathized",
+      label: "共感済み",
+      icon: Heart,
+      path: "/empathized",
+      filter: "all" as const,
     },
     {
       id: "proposal",

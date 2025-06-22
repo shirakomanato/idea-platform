@@ -10,19 +10,25 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { useIdeas } from "@/lib/supabase/hooks"
 import { useToast } from "@/hooks/use-toast"
-import { toggleLike } from "@/lib/supabase/actions"
+import { toggleLike, recommendIdea, empathizeWithIdea, getRecommendedIdeas, getEmpathizedIdeas } from "@/lib/supabase/actions"
 
 function DashboardContent() {
   const { currentIdeaIndex, setCurrentIdeaIndex, user, currentFilter } = useAppStore()
   const { ideas: supabaseIdeas, loading, error } = useIdeas()
   const router = useRouter()
   const { toast } = useToast()
+  const [recommendedIdeas, setRecommendedIdeas] = useState<string[]>([])
+  const [empathizedIdeas, setEmpathizedIdeas] = useState<string[]>([])
 
   useEffect(() => {
     if (!user) {
       router.push("/connect")
       return
     }
+    
+    // ユーザーの推薦・共感リストを読み込み
+    setRecommendedIdeas(getRecommendedIdeas(user.address))
+    setEmpathizedIdeas(getEmpathizedIdeas(user.address))
   }, [user, router])
 
   useEffect(() => {
@@ -36,8 +42,8 @@ function DashboardContent() {
   }, [error, toast])
 
 
-  // Supabaseのアイデアを使用
-  const allIdeas = supabaseIdeas
+  // Supabaseのアイデアを使用し、推薦済みを除外
+  const allIdeas = supabaseIdeas.filter(idea => !recommendedIdeas.includes(idea.id))
   
   const filteredIdeas = allIdeas.filter((idea) => {
     if (currentFilter === "all") return true
@@ -51,34 +57,58 @@ function DashboardContent() {
 
   const handleSwipeLeft = async () => {
     // 他者推薦機能
+    console.log('handleSwipeLeft called', { user: !!user, currentIdea: !!currentIdea })
     if (user && currentIdea) {
-      toast({
-        title: "💪 推薦",
-        description: "このアイデアを他の人に推薦しました",
-      })
-      console.log(`Recommended idea ${currentIdea.id} by ${user.address}`)
-      // TODO: 推薦機能のSupabase実装を追加
+      try {
+        console.log('Recommending idea:', currentIdea.id)
+        await recommendIdea(currentIdea.id, user.address)
+        setRecommendedIdeas(prev => [...prev, currentIdea.id])
+        
+        toast({
+          title: "💪 推薦完了",
+          description: "このアイデアを他の人に推薦しました。あなたのフィードから非表示になります。",
+        })
+        console.log(`Recommended idea ${currentIdea.id} by ${user.address}`)
+      } catch (error) {
+        console.error('Recommendation error:', error)
+        toast({
+          title: "エラー",
+          description: "推薦に失敗しました",
+          variant: "destructive",
+        })
+      }
     }
     nextIdea()
   }
 
   const handleSwipeRight = async () => {
-    // Like機能 - 共感
+    // 共感機能 - いいねと追跡
+    console.log('handleSwipeRight called', { user: !!user, currentIdea: !!currentIdea })
     if (user && currentIdea) {
       try {
-        const userIdToUse = user.address
-        await toggleLike(currentIdea.id, userIdToUse)
+        console.log('Empathizing with idea:', currentIdea.id)
+        const result = await empathizeWithIdea(currentIdea.id, user.address)
+        
+        // 共感リストを更新（結果に関係なく追加）
+        setEmpathizedIdeas(prev => {
+          if (!prev.includes(currentIdea.id)) {
+            const newList = [...prev, currentIdea.id]
+            console.log('Updated empathized ideas list:', newList)
+            return newList
+          }
+          return prev
+        })
         
         toast({
-          title: "✨ 共感",
-          description: "このアイデアに共感しました！",
+          title: "✨ 共感完了",
+          description: "このアイデアに共感しました！今後の動向を追跡できます。",
         })
-        console.log(`Liked idea ${currentIdea.id} by ${user.address}`)
+        console.log(`Empathized with idea ${currentIdea.id} by ${user.address}`)
       } catch (error) {
-        console.error('Error liking idea:', error)
+        console.error('Error empathizing:', error)
         toast({
           title: "エラー",
-          description: "いいねに失敗しました",
+          description: "共感に失敗しました",
           variant: "destructive",
         })
       }
@@ -153,10 +183,13 @@ function DashboardContent() {
             <div className="mt-8 flex items-center justify-between px-4">
               <div className="flex items-center space-x-3">
                 <div className="relative">
-                  <div className="w-12 h-12 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center shadow-lg transform hover:scale-110 transition-transform">
+                  <button 
+                    onClick={handleSwipeLeft}
+                    className="w-12 h-12 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center shadow-lg transform hover:scale-110 transition-transform cursor-pointer"
+                  >
                     <span className="text-white font-bold text-lg">←</span>
-                  </div>
-                  <div className="absolute -inset-1 bg-red-400 rounded-full blur-md opacity-40"></div>
+                  </button>
+                  <div className="absolute -inset-1 bg-red-400 rounded-full blur-md opacity-40 pointer-events-none"></div>
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-800 dark:text-white">推薦</p>
@@ -170,10 +203,13 @@ function DashboardContent() {
                   <p className="text-xs text-gray-500 dark:text-gray-400 text-right">いいね！</p>
                 </div>
                 <div className="relative">
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg transform hover:scale-110 transition-transform">
+                  <button 
+                    onClick={handleSwipeRight}
+                    className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg transform hover:scale-110 transition-transform cursor-pointer"
+                  >
                     <span className="text-white font-bold text-lg">→</span>
-                  </div>
-                  <div className="absolute -inset-1 bg-green-400 rounded-full blur-md opacity-40"></div>
+                  </button>
+                  <div className="absolute -inset-1 bg-green-400 rounded-full blur-md opacity-40 pointer-events-none"></div>
                 </div>
               </div>
             </div>
