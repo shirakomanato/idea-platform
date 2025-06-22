@@ -22,7 +22,24 @@ function DashboardContent() {
   const [empathizedIdeas, setEmpathizedIdeas] = useState<string[]>([])
 
   // 保護されたルートの認証チェック
-  const { isAuthenticated, user } = useProtectedRoute()
+  const { isAuthenticated, user, isLoading } = useProtectedRoute()
+
+  // 認証チェック中は早期リターン
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+          <p className="text-sm text-muted-foreground">認証確認中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // 認証されていない場合は何もレンダリングしない（useProtectedRouteがリダイレクトする）
+  if (!isAuthenticated) {
+    return null
+  }
 
   useEffect(() => {
     if (isAuthenticated && user) {

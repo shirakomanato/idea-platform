@@ -17,27 +17,28 @@ export function useProtectedRoute(
   requireWallet: boolean = true
 ) {
   const router = useRouter()
-  const { user, connected } = useAppStore()
+  const { user, isConnected, hasHydrated } = useAppStore()
   
-  const isAuthenticated = requireWallet ? (connected && !!user) : !!user
+  const isAuthenticated = requireWallet ? (isConnected && !!user) : !!user
   
   useEffect(() => {
-    // 認証が必要だが、ユーザーが認証されていない場合
-    if (!isAuthenticated) {
+    // Wait for store hydration before checking authentication
+    if (hasHydrated && !isAuthenticated) {
       console.log('useProtectedRoute: Redirecting to', redirectTo, {
-        connected,
+        isConnected,
         hasUser: !!user,
-        requireWallet
+        requireWallet,
+        hasHydrated
       })
       router.push(redirectTo)
     }
-  }, [isAuthenticated, router, redirectTo, connected, user, requireWallet])
+  }, [isAuthenticated, router, redirectTo, isConnected, user, requireWallet, hasHydrated])
   
   return {
     isAuthenticated,
     user,
-    connected,
-    isLoading: false, // 必要に応じて読み込み状態を追加
+    connected: isConnected,
+    isLoading: !hasHydrated, // Store hydration state as loading
   }
 }
 
