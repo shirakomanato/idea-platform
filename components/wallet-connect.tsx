@@ -32,6 +32,25 @@ export function WalletConnect(): JSX.Element {
           try {
             const supabase = createClient()
             
+            // Supabaseが設定されていない場合はローカルユーザーで続行
+            if (!supabase) {
+              console.warn('Supabase not configured, using local user only')
+              setUser({
+                address: walletAddress,
+                nickname: `User_${walletAddress.slice(-4)}`,
+                id: walletAddress,
+              })
+              setConnected(true)
+
+              toast({
+                title: "ウォレット接続成功",
+                description: "Metamaskに接続されました（ローカルモード）",
+              })
+
+              router.push("/dashboard")
+              return
+            }
+            
             // データベースでユーザーを検索または作成
             let { data: existingUser, error: fetchError } = await supabase
               .from('users')

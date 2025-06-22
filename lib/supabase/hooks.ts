@@ -11,6 +11,14 @@ export function useIdeas() {
   useEffect(() => {
     const supabase = createClient()
     
+    // Fallback for local development without Supabase
+    if (!supabase) {
+      console.warn('Supabase not configured, using empty data')
+      setIdeas([])
+      setLoading(false)
+      return
+    }
+    
     // 初期データの取得
     const fetchIdeas = async () => {
       try {
@@ -115,6 +123,14 @@ export function useIdeaDetails(ideaId: string) {
     if (!ideaId) return
 
     const supabase = createClient()
+    
+    // Fallback for local development without Supabase
+    if (!supabase) {
+      console.warn('Supabase not configured, using empty data')
+      setIdea(null)
+      setLoading(false)
+      return
+    }
     
     // 初期データの取得
     const fetchIdea = async () => {

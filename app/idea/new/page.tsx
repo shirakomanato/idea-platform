@@ -10,8 +10,6 @@ import { Label } from "@/components/ui/label"
 import { ArrowLeft, Sparkles, Loader2 } from "lucide-react"
 import { useAppStore } from "@/lib/store"
 import { useToast } from "@/hooks/use-toast"
-import { generateText } from "ai"
-import { openai } from "@ai-sdk/openai"
 import { createClient } from "@/lib/supabase/client"
 import type { IdeaInsert } from "@/types/database"
 
@@ -47,45 +45,44 @@ export default function NewIdeaPage() {
 
     setIsGenerating(true)
     try {
-      const prompt = `
-以下のアイデアの情報を基に、What（何を作るか）、How（どのように実現するか）、Impact（期待される効果）を提案してください。
-
-タイトル: ${formData.title}
-ターゲット: ${formData.target}
-Why（なぜ必要か）: ${formData.why}
-
-以下の形式で回答してください：
-What: [具体的なソリューション]
-How: [実現方法・技術スタック]
-Impact: [期待される効果・数値目標]
-`
-
-      const { text } = await generateText({
-        model: openai("gpt-4o"),
-        prompt,
+      const response = await fetch('/api/generate-idea', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          target: formData.target,
+          why: formData.why,
+        }),
       })
 
-      // AIの回答をパース
-      const lines = text.split("\n")
-      const whatMatch = lines.find((line) => line.startsWith("What:"))
-      const howMatch = lines.find((line) => line.startsWith("How:"))
-      const impactMatch = lines.find((line) => line.startsWith("Impact:"))
+      const result = await response.json()
 
-      setFormData((prev) => ({
-        ...prev,
-        what: whatMatch ? whatMatch.replace("What:", "").trim() : prev.what,
-        how: howMatch ? howMatch.replace("How:", "").trim() : prev.how,
-        impact: impactMatch ? impactMatch.replace("Impact:", "").trim() : prev.impact,
-      }))
+      if (!response.ok) {
+        throw new Error(result.error || 'AI生成に失敗しました')
+      }
 
-      toast({
-        title: "AI生成完了",
-        description: "アイデアの詳細が生成されました",
-      })
+      if (result.success && result.data) {
+        setFormData((prev) => ({
+          ...prev,
+          what: result.data.what || prev.what,
+          how: result.data.how || prev.how,
+          impact: result.data.impact || prev.impact,
+        }))
+
+        toast({
+          title: "🤖 AI生成完了",
+          description: "アイデアの詳細が生成されました",
+        })
+      } else {
+        throw new Error('生成されたデータが不正です')
+      }
     } catch (error) {
+      console.error('AI生成エラー:', error)
       toast({
         title: "エラー",
-        description: "AI生成に失敗しました",
+        description: error instanceof Error ? error.message : "AI生成に失敗しました",
         variant: "destructive",
       })
     } finally {
@@ -131,6 +128,17 @@ Impact: [期待される効果・数値目標]
         console.log('Supabase Key exists:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
         
         const supabase = createClient()
+        
+        // Supabaseが設定されていない場合はスキップ
+        if (!supabase) {
+          console.warn('Supabase not configured, saved to local store only')
+          toast({
+            title: "投稿完了",
+            description: "アイデアが投稿されました（ローカルモード）",
+          })
+          router.push("/dashboard")
+          return
+        }
         
         // ユーザーコンテキストを設定
         try {
