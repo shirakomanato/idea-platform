@@ -14,11 +14,22 @@
 3. **環境変数の設定**
    Vercelのプロジェクト設定で以下の環境変数を追加：
 
+   **方法1: Vercel Dashboardで設定（推奨）**
+   - Project Settings → Environment Variables
+   
    ```
    NEXT_PUBLIC_SUPABASE_URL=https://bimzstqncmvadktxjnbq.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=[Supabase Anon Key]
    SUPABASE_SERVICE_ROLE_KEY=[Supabase Service Role Key]
    OPENAI_API_KEY=[OpenAI API Key]
+   ```
+   
+   **方法2: Vercel CLIで設定**
+   ```bash
+   vercel env add NEXT_PUBLIC_SUPABASE_URL
+   vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY
+   vercel env add SUPABASE_SERVICE_ROLE_KEY
+   vercel env add OPENAI_API_KEY
    ```
 
 4. **デプロイ実行**
