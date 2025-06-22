@@ -41,8 +41,10 @@ interface AppState {
   // User state
   user: User | null
   isConnected: boolean
+  hasHydrated: boolean
   setUser: (user: User | null) => void
   setConnected: (connected: boolean) => void
+  setHasHydrated: (hasHydrated: boolean) => void
 
   // Ideas state
   ideas: Idea[]
@@ -64,8 +66,10 @@ export const useAppStore = create<AppState>()(
       // User state
       user: null,
       isConnected: false,
+      hasHydrated: false,
       setUser: (user) => set({ user }),
       setConnected: (connected) => set({ isConnected: connected }),
+      setHasHydrated: (hasHydrated) => set({ hasHydrated }),
 
       // Ideas state
       ideas: [
@@ -154,6 +158,9 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: "idea-junkies-storage",
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true)
+      },
     },
   ),
 )

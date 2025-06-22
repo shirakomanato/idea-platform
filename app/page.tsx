@@ -5,16 +5,18 @@ import { useRouter } from "next/navigation"
 import { useAppStore } from "@/lib/store"
 
 export default function HomePage() {
-  const { user } = useAppStore()
+  const { user, hasHydrated } = useAppStore()
   const router = useRouter()
 
   useEffect(() => {
-    if (user) {
-      router.push("/dashboard")
-    } else {
-      router.push("/connect")
+    if (hasHydrated) {
+      if (user) {
+        router.push("/dashboard")
+      } else {
+        router.push("/connect")
+      }
     }
-  }, [user, router])
+  }, [user, router, hasHydrated])
 
   return (
     <div className="min-h-screen flex items-center justify-center">
