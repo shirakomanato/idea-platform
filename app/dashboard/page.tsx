@@ -1,35 +1,36 @@
 "use client"
 
 import { useEffect, useState, Suspense } from "react"
+import Link from "next/link"
 import { useAppStore } from "@/lib/store"
 import { SwipeCard } from "@/components/swipe-card"
 import { BottomNavigation } from "@/components/bottom-navigation"
 import { Button } from "@/components/ui/button"
 import { Plus, Menu, Sparkles, Loader2 } from "lucide-react"
-import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { useIdeas } from "@/lib/supabase/hooks"
 import { useToast } from "@/hooks/use-toast"
+import { useProtectedRoute } from "@/hooks/useProtectedRoute"
 import { toggleLike, recommendIdea, empathizeWithIdea, getRecommendedIdeas, getEmpathizedIdeas } from "@/lib/supabase/actions"
+import { ROUTES } from "@/lib/routes"
 
 function DashboardContent() {
-  const { currentIdeaIndex, setCurrentIdeaIndex, user, currentFilter } = useAppStore()
+  const { currentIdeaIndex, setCurrentIdeaIndex, currentFilter } = useAppStore()
   const { ideas: supabaseIdeas, loading, error } = useIdeas()
-  const router = useRouter()
   const { toast } = useToast()
   const [recommendedIdeas, setRecommendedIdeas] = useState<string[]>([])
   const [empathizedIdeas, setEmpathizedIdeas] = useState<string[]>([])
 
+  // 保護されたルートの認証チェック
+  const { isAuthenticated, user } = useProtectedRoute()
+
   useEffect(() => {
-    if (!user) {
-      router.push("/connect")
-      return
+    if (isAuthenticated && user) {
+      // ユーザーの推薦・共感リストを読み込み
+      setRecommendedIdeas(getRecommendedIdeas(user.address))
+      setEmpathizedIdeas(getEmpathizedIdeas(user.address))
     }
-    
-    // ユーザーの推薦・共感リストを読み込み
-    setRecommendedIdeas(getRecommendedIdeas(user.address))
-    setEmpathizedIdeas(getEmpathizedIdeas(user.address))
-  }, [user, router])
+  }, [isAuthenticated, user])
 
   useEffect(() => {
     if (error) {
@@ -148,9 +149,11 @@ function DashboardContent() {
           <h1 className="text-lg font-semibold">For the Idea Junkies</h1>
         </div>
 
-        <Button variant="ghost" size="icon" onClick={() => router.push("/idea/new")}>
-          <Plus className="w-5 h-5" />
-        </Button>
+        <Link href={ROUTES.NEW_IDEA}>
+          <Button variant="ghost" size="icon">
+            <Plus className="w-5 h-5" />
+          </Button>
+        </Link>
       </div>
 
       {/* Main Content */}

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,7 +11,9 @@ import { Label } from "@/components/ui/label"
 import { ArrowLeft, Sparkles, Loader2 } from "lucide-react"
 import { useAppStore } from "@/lib/store"
 import { useToast } from "@/hooks/use-toast"
+import { useProtectedRoute } from "@/hooks/useProtectedRoute"
 import { createClient } from "@/lib/supabase/client"
+import { ROUTES } from "@/lib/routes"
 import type { IdeaInsert } from "@/types/database"
 
 export default function NewIdeaPage() {
@@ -25,9 +28,12 @@ export default function NewIdeaPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const { user, addIdea } = useAppStore()
+  const { addIdea } = useAppStore()
   const router = useRouter()
   const { toast } = useToast()
+  
+  // 保護されたルートの認証チェック
+  const { isAuthenticated, user } = useProtectedRoute()
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -136,7 +142,7 @@ export default function NewIdeaPage() {
             title: "投稿完了",
             description: "アイデアが投稿されました（ローカルモード）",
           })
-          router.push("/dashboard")
+          router.push(ROUTES.DASHBOARD)
           return
         }
         
@@ -188,7 +194,7 @@ export default function NewIdeaPage() {
         description: "アイデアが投稿されました",
       })
 
-      router.push("/dashboard")
+      router.push(ROUTES.DASHBOARD)
     } catch (error: unknown) {
       console.error('Idea creation error:', error)
       

@@ -1,14 +1,15 @@
 "use client"
 
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Lightbulb, FileText, Rocket, User, Heart } from "lucide-react"
 import { useAppStore } from "@/lib/store"
-import { useRouter, usePathname } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { ROUTES } from "@/lib/routes"
 
 export function BottomNavigation() {
   const { currentFilter, setCurrentFilter } = useAppStore()
-  const router = useRouter()
   const pathname = usePathname()
 
   const navItems = [
@@ -16,42 +17,46 @@ export function BottomNavigation() {
       id: "idea",
       label: "アイデア",
       icon: Lightbulb,
-      path: "/dashboard",
+      path: ROUTES.DASHBOARD,
       filter: "idea" as const,
+      prefetch: true, // メインページなので事前読み込み
     },
     {
       id: "pre-draft",
       label: "プリドラフト",
       icon: FileText,
-      path: "/pre-drafts",
+      path: ROUTES.PRE_DRAFTS,
       filter: "pre-draft" as const,
+      prefetch: false,
     },
     {
       id: "empathized",
       label: "共感済み",
       icon: Heart,
-      path: "/empathized",
+      path: ROUTES.EMPATHIZED,
       filter: "all" as const,
+      prefetch: false,
     },
     {
       id: "proposal",
       label: "プロポーザル",
       icon: Rocket,
-      path: "/proposals",
+      path: ROUTES.PROPOSALS,
       filter: "proposal" as const,
+      prefetch: false,
     },
     {
       id: "profile",
       label: "プロフィール",
       icon: User,
-      path: "/me",
+      path: ROUTES.PROFILE,
       filter: "all" as const,
+      prefetch: false,
     },
   ]
 
   const handleNavClick = (item: (typeof navItems)[0]) => {
     setCurrentFilter(item.filter)
-    router.push(item.path)
   }
 
   return (
@@ -62,16 +67,20 @@ export function BottomNavigation() {
           const isActive = pathname === item.path || (item.filter !== "all" && currentFilter === item.filter)
 
           return (
-            <Button
+            <Link
               key={item.id}
-              variant="ghost"
-              size="sm"
+              href={item.path}
+              prefetch={item.prefetch}
               onClick={() => handleNavClick(item)}
-              className={cn("flex flex-col items-center space-y-1 h-auto py-2 px-3", isActive && "text-primary")}
+              className={cn(
+                "flex flex-col items-center space-y-1 py-2 px-3 rounded-md transition-colors",
+                "hover:bg-accent hover:text-accent-foreground",
+                isActive && "text-primary"
+              )}
             >
               <Icon className={cn("w-5 h-5", isActive && "text-primary")} />
               <span className="text-xs">{item.label}</span>
-            </Button>
+            </Link>
           )
         })}
       </div>

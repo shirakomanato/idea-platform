@@ -10,14 +10,15 @@ import { ArrowLeft, Heart, MessageCircle, Share2, User, Calendar, GitBranch, Sen
 import { useAppStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
+import { useProtectedRoute } from "@/hooks/useProtectedRoute"
 import { useIdeaDetails } from "@/lib/supabase/hooks"
 import { toggleLike, addComment, getComments } from "@/lib/supabase/actions"
+import { ROUTES } from "@/lib/routes"
 import type { CommentWithUser } from "@/types/database"
 
 export default function IdeaDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const { user } = useAppStore()
   const { toast } = useToast()
   const [comment, setComment] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -27,11 +28,8 @@ export default function IdeaDetailPage() {
   
   const { idea, loading, error } = useIdeaDetails(params.id as string)
 
-  useEffect(() => {
-    if (!user) {
-      router.push("/connect")
-    }
-  }, [user, router])
+  // 保護されたルートの認証チェック
+  const { isAuthenticated, user } = useProtectedRoute()
 
   useEffect(() => {
     if (idea) {
@@ -63,7 +61,7 @@ export default function IdeaDetailPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950">
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">アイデアが見つかりません</h2>
-          <Button onClick={() => router.push("/dashboard")}>ダッシュボードに戻る</Button>
+          <Button onClick={() => router.push(ROUTES.DASHBOARD)}>ダッシュボードに戻る</Button>
         </div>
       </div>
     )

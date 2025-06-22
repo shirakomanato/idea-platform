@@ -8,79 +8,197 @@
    - Environments: .env.local
 
  ✓ Starting...
- ✓ Ready in 1200ms
- ✓ Compiled /middleware in 166ms (218 modules)
+ ✓ Ready in 1007ms
+ ✓ Compiled /middleware in 167ms (218 modules)
  ○ Compiling / ...
- ✓ Compiled / in 1315ms (800 modules)
- HEAD / 200 in 1464ms
- ✓ Compiled in 377ms (358 modules)
- GET / 200 in 41ms
- ○ Compiling /connect ...
- ✓ Compiled /connect in 661ms (991 modules)
- GET /connect 200 in 715ms
- ✓ Compiled /dashboard in 321ms (1038 modules)
- GET /dashboard 200 in 365ms
- ✓ Compiled /idea/new in 405ms (1242 modules)
- GET /idea/new 200 in 454ms
- ✓ Compiled in 307ms (1251 modules)
- GET /idea/new 200 in 45ms
- ✓ Compiled in 223ms (1251 modules)
- GET /idea/new 200 in 32ms
- GET /idea/new 200 in 119ms
- ✓ Compiled in 186ms (562 modules)
-   Reload env: .env.local
- GET /idea/new 200 in 121ms
- ✓ Compiled in 507ms (1455 modules)
- GET /idea/new 200 in 42ms
- ✓ Compiled in 100ms (562 modules)
- GET /idea/new 200 in 9ms
-   Reload env: .env.local
- ✓ Compiled in 173ms (1455 modules)
- GET /idea/new 200 in 33ms
- ✓ Compiled in 178ms (562 modules)
-   Reload env: .env.local
- GET /idea/new 200 in 22ms
- ✓ Compiled in 201ms (1455 modules)
- GET /idea/new 200 in 170ms
- GET /idea/new 200 in 40ms
- GET /dashboard 200 in 40ms
- GET /connect 200 in 10ms
+ ✓ Compiled / in 962ms (800 modules)
+ GET / 200 in 1122ms
+ ✓ Compiled in 208ms (358 modules)
+ GET / 200 in 32ms
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 776ms (1038 modules)
+ GET /dashboard 200 in 759ms
+ GET /connect 200 in 841ms
+ ✓ Compiled /idea/[id] in 282ms (1054 modules)
+ GET /idea/2163fca9-54d3-43e9-b2f2-04677245574f 200 in 628ms
+ ✓ Compiled in 215ms (1068 modules)
+ GET /idea/2163fca9-54d3-43e9-b2f2-04677245574f 200 in 33ms
+ ✓ Compiled in 199ms (1055 modules)
+ GET /idea/2163fca9-54d3-43e9-b2f2-04677245574f 200 in 25ms
+ ✓ Compiled in 318ms (1055 modules)
+ GET /idea/2163fca9-54d3-43e9-b2f2-04677245574f 200 in 47ms
+ ✓ Compiled /pre-drafts in 247ms (1050 modules)
+ GET /pre-drafts 200 in 289ms
+ GET /idea/2 200 in 21ms
+ GET /dashboard 200 in 15ms
+ ✓ Compiled /idea/new in 450ms (1065 modules)
+ GET /idea/new 200 in 493ms
+ ✓ Compiled /proposals in 233ms (1074 modules)
+ GET /proposals 200 in 262ms
+ ✓ Compiled /me in 242ms (1090 modules)
+ GET /me 200 in 266ms
+ GET /idea/1750591258238 200 in 19ms
+ GET /dashboard 200 in 15ms
+ ✓ Compiled in 512ms (1104 modules)
+ GET /dashboard 200 in 41ms
+ ✓ Compiled in 272ms (1104 modules)
+ GET /dashboard 200 in 32ms
+ ✓ Compiled in 254ms (1104 modules)
+ GET /dashboard 200 in 21ms
+ ✓ Compiled in 211ms (1098 modules)
+ GET /dashboard 200 in 29ms
+ ✓ Compiled in 417ms (1098 modules)
+ GET /dashboard 200 in 42ms
+ GET /dashboard 200 in 93ms
+ ✓ Compiled /connect in 312ms (619 modules)
+ GET /connect 200 in 355ms
+ GET /dashboard 200 in 14ms
+ GET /idea/2163fca9-54d3-43e9-b2f2-04677245574f 200 in 21ms
+ GET /idea/2163fca9-54d3-43e9-b2f2-04677245574f 200 in 11ms
+ ✓ Compiled in 353ms (1098 modules)
+ GET /dashboard 200 in 31ms
+ ✓ Compiled in 265ms (1098 modules)
+ GET /dashboard 200 in 30ms
+ ✓ Compiled in 359ms (1098 modules)
+ GET /dashboard 200 in 23ms
+ ✓ Compiled in 197ms (1098 modules)
+ GET /dashboard 200 in 19ms
+ ✓ Compiled in 243ms (1098 modules)
+ GET /dashboard 200 in 20ms
+ GET /dashboard 200 in 98ms
+ ✓ Compiled /connect in 319ms (619 modules)
+ GET /connect 200 in 360ms
+ ✓ Compiled / in 198ms (624 modules)
+ GET / 200 in 258ms
+ GET /connect 200 in 8ms
  GET /dashboard 200 in 8ms
- GET /idea/new 200 in 11ms
- GET /idea/new 200 in 32ms
- ✓ Compiled in 412ms (1455 modules)
- GET /idea/new 200 in 213ms
- GET /idea/new 200 in 9ms
- ✓ Compiled in 416ms (1066 modules)
- GET /idea/new 200 in 25ms
- ✓ Compiled in 199ms (1066 modules)
- GET /idea/new 200 in 36ms
- GET /idea/new 200 in 122ms
- ✓ Compiled /api/generate-idea in 484ms (1114 modules)
-AI生成エラー: Error [AI_APICallError]: Incorrect API key provided: sk-proj-******************************************************************************************************************************************************gxaw. You can find your API key at https://platform.openai.com/account/api-keys.
-    at async POST (app/api/generate-idea/route.ts:51:21)
-  49 |
-  50 |     // OpenAI API呼び出し
-> 51 |     const { text } = await generateText({
-     |                     ^
-  52 |       model: openai('gpt-4o'),
-  53 |       prompt,
-  54 |       maxTokens: 800, {
-  cause: undefined,
-  url: 'https://api.openai.com/v1/chat/completions',
-  requestBodyValues: [Object],
-  statusCode: 401,
-  responseHeaders: [Object],
-  responseBody: '{\n' +
-    '    "error": {\n' +
-    '        "message": "Incorrect API key provided: sk-proj-******************************************************************************************************************************************************gxaw. You can find your API key at https://platform.openai.com/account/api-keys.",\n' +
-    '        "type": "invalid_request_error",\n' +
-    '        "param": null,\n' +
-    '        "code": "invalid_api_key"\n' +
-    '    }\n' +
-    '}\n',
-  isRetryable: false,
-  data: [Object]
-}
- POST /api/generate-idea 500 in 957ms
+ ✓ Compiled in 444ms (1110 modules)
+ GET /dashboard 200 in 38ms
+ ✓ Compiled in 205ms (1110 modules)
+ GET /dashboard 200 in 30ms
+ ✓ Compiled in 216ms (1105 modules)
+ GET /dashboard 200 in 18ms
+ ✓ Compiled in 204ms (1098 modules)
+ GET /dashboard 200 in 33ms
+ GET /me 200 in 16ms
+ ✓ Compiled /proposals in 234ms (618 modules)
+ GET /proposals 200 in 261ms
+ ✓ Compiled /empathized in 369ms (1099 modules)
+ GET /empathized 200 in 401ms
+ GET /dashboard 200 in 12ms
+ GET /empathized 200 in 10ms
+ GET /dashboard 200 in 10ms
+ GET /pre-drafts 200 in 15ms
+ GET /empathized 200 in 9ms
+ GET /dashboard 200 in 9ms
+ GET /pre-drafts 200 in 10ms
+ GET /empathized 200 in 8ms
+ GET /pre-drafts 200 in 8ms
+ ✓ Compiled in 475ms (1099 modules)
+ GET /pre-drafts 200 in 20ms
+ GET /pre-drafts 200 in 107ms
+ ✓ Compiled /connect in 217ms (617 modules)
+ GET /connect 200 in 241ms
+ GET /dashboard 200 in 17ms
+ GET /dashboard 200 in 8ms
+ GET /pre-drafts 200 in 14ms
+ ✓ Compiled /proposals in 111ms (623 modules)
+ GET /proposals 200 in 138ms
+ GET /pre-drafts 200 in 14ms
+ GET /empathized 200 in 15ms
+ GET /dashboard 200 in 15ms
+ GET /idea/new 200 in 19ms
+ ✓ Compiled /api/generate-idea in 406ms (1160 modules)
+ GET /dashboard 200 in 37ms
+ POST /api/generate-idea 200 in 7811ms
+ GET /empathized 200 in 15ms
+ ✓ Compiled /idea/[id] in 232ms (693 modules)
+ GET /idea/cf7c14d9-5aca-46a8-a3b1-f1ba0ab442e8 200 in 271ms
+ GET /empathized 200 in 99ms
+ GET /connect 200 in 9ms
+ GET /empathized 200 in 25ms
+ GET /connect 200 in 9ms
+ GET /dashboard 200 in 14ms
+ GET /empathized 200 in 9ms
+ ✓ Compiled in 486ms (1096 modules)
+ GET /connect 200 in 55ms
+ GET /empathized 200 in 12ms
+ ✓ Compiled in 320ms (1096 modules)
+ GET /connect 200 in 32ms
+ GET /empathized 200 in 9ms
+ ✓ Compiled in 397ms (1096 modules)
+ GET /connect 200 in 23ms
+ GET /empathized 200 in 11ms
+ GET /dashboard 200 in 14ms
+ ✓ Compiled /pre-drafts in 119ms (613 modules)
+ GET /pre-drafts 200 in 143ms
+ GET /empathized 200 in 9ms
+ ✓ Compiled /idea/[id] in 266ms (622 modules)
+ GET /idea/cf7c14d9-5aca-46a8-a3b1-f1ba0ab442e8 200 in 297ms
+ ✓ Compiled in 405ms (1102 modules)
+ GET /idea/cf7c14d9-5aca-46a8-a3b1-f1ba0ab442e8 200 in 46ms
+ GET /empathized 200 in 10ms
+ ✓ Compiled in 206ms (1096 modules)
+ GET /idea/cf7c14d9-5aca-46a8-a3b1-f1ba0ab442e8 200 in 39ms
+ GET /empathized 200 in 14ms
+ ✓ Compiled in 269ms (1096 modules)
+ GET /idea/cf7c14d9-5aca-46a8-a3b1-f1ba0ab442e8 200 in 25ms
+ GET /empathized 200 in 10ms
+ GET /idea/cf7c14d9-5aca-46a8-a3b1-f1ba0ab442e8 200 in 12ms
+ ✓ Compiled /pre-drafts in 183ms (613 modules)
+ GET /pre-drafts 200 in 209ms
+ GET /dashboard 200 in 10ms
+ ✓ Compiled /idea/new in 301ms (622 modules)
+ GET /idea/new 200 in 330ms
+ ✓ Compiled /api/generate-idea in 231ms (684 modules)
+ POST /api/generate-idea 200 in 7031ms
+ GET /dashboard 200 in 33ms
+ ⨯ ./lib/supabase/actions.ts
+Error:   [31mx[0m Expected a semicolon
+     ,-[[36;1;4m/Users/shiraikoutarou/idea-platform/lib/supabase/actions.ts[0m:259:1]
+ [2m256[0m | }
+ [2m257[0m | 
+ [2m258[0m | // コメント追加（ローカルストレージフォールバック付き）
+ [2m259[0m | export async function addComment(ideaId: string, userAddress: string, content: string) {
+     : [35;1m^[0m
+ [2m260[0m |   console.log('addComment called with:', { ideaId, userAddress, content })
+ [2m261[0m |   
+ [2m262[0m |   try {
+     `----
+  [31mx[0m 'import', and 'export' cannot be used outside of module code
+     ,-[[36;1;4m/Users/shiraikoutarou/idea-platform/lib/supabase/actions.ts[0m:259:1]
+ [2m256[0m | }
+ [2m257[0m | 
+ [2m258[0m | // コメント追加（ローカルストレージフォールバック付き）
+ [2m259[0m | export async function addComment(ideaId: string, userAddress: string, content: string) {
+     : [35;1m^^^^^^[0m
+ [2m260[0m |   console.log('addComment called with:', { ideaId, userAddress, content })
+ [2m261[0m |   
+ [2m262[0m |   try {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./lib/supabase/actions.ts
+./app/dashboard/page.tsx
+ ✓ Compiled in 399ms (1097 modules)
+ GET /dashboard 200 in 60ms
+ GET /empathized 200 in 9ms
+ ✓ Compiled in 185ms (1097 modules)
+ GET /dashboard 200 in 32ms
+ GET /empathized 200 in 11ms
+ ✓ Compiled in 232ms (1097 modules)
+ GET /dashboard 200 in 23ms
+ GET /empathized 200 in 10ms
+ ✓ Compiled in 165ms (1097 modules)
+ GET /dashboard 200 in 21ms
+ GET /empathized 200 in 9ms
+ ✓ Compiled in 369ms (1097 modules)
+ GET /dashboard 200 in 34ms
+ GET /empathized 200 in 29ms
+ ✓ Compiled in 213ms (1097 modules)
+ GET /dashboard 200 in 22ms
+ GET /empathized 200 in 9ms
 [?25h

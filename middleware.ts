@@ -1,8 +1,28 @@
-import { type NextRequest } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
+import { PROTECTED_ROUTES, ROUTES } from '@/lib/routes'
 
 export async function middleware(request: NextRequest) {
-  return await updateSession(request)
+  const path = request.nextUrl.pathname
+  
+  // Supabaseセッションの更新
+  const supabaseResponse = await updateSession(request)
+  
+  // 保護されたルートかチェック
+  const isProtectedPath = PROTECTED_ROUTES.some(route => path.startsWith(route))
+  
+  if (isProtectedPath) {
+    // 開発環境ではより詳細なログ
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Middleware: Protected path accessed: ${path}`)
+    }
+    
+    // 実際の認証チェックはクライアントサイドで行う
+    // ここではSupabaseセッションのみ管理
+    // 必要に応じて将来的にサーバーサイド認証を追加可能
+  }
+  
+  return supabaseResponse
 }
 
 export const config = {

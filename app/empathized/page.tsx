@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, Suspense } from "react"
+import Link from "next/link"
 import { useAppStore } from "@/lib/store"
 import { SwipeCard } from "@/components/swipe-card"
 import { BottomNavigation } from "@/components/bottom-navigation"
@@ -10,28 +11,29 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { useIdeas } from "@/lib/supabase/hooks"
 import { useToast } from "@/hooks/use-toast"
+import { useProtectedRoute } from "@/hooks/useProtectedRoute"
 import { getEmpathizedIdeas } from "@/lib/supabase/actions"
+import { ROUTES } from "@/lib/routes"
 import type { IdeaWithUser } from "@/types/database"
 
 function EmpathizedContent() {
-  const { user } = useAppStore()
   const { ideas: allIdeas, loading, error } = useIdeas()
   const router = useRouter()
   const { toast } = useToast()
   const [empathizedIdeas, setEmpathizedIdeas] = useState<string[]>([])
   const [filteredIdeas, setFilteredIdeas] = useState<IdeaWithUser[]>([])
 
-  useEffect(() => {
-    if (!user) {
-      router.push("/connect")
-      return
-    }
+  // 保護されたルートの認証チェック
+  const { isAuthenticated, user } = useProtectedRoute()
 
-    // ユーザーが共感したアイデアIDを取得
-    const empathizedIds = getEmpathizedIdeas(user.address)
-    console.log('Loading empathized ideas for user:', user.address, empathizedIds)
-    setEmpathizedIdeas(empathizedIds)
-  }, [user, router])
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // ユーザーが共感したアイデアIDを取得
+      const empathizedIds = getEmpathizedIdeas(user.address)
+      console.log('Loading empathized ideas for user:', user.address, empathizedIds)
+      setEmpathizedIdeas(empathizedIds)
+    }
+  }, [isAuthenticated, user])
 
   // ページがフォーカスされた時にもリロード
   useEffect(() => {
@@ -108,9 +110,11 @@ function EmpathizedContent() {
               <Heart className="w-12 h-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">共感したアイデアがありません</h3>
               <p className="text-muted-foreground mb-4">アイデアに共感すると、ここで追跡できるようになります。</p>
-              <Button onClick={() => router.push("/dashboard")}>
-                アイデアを見る
-              </Button>
+              <Link href={ROUTES.DASHBOARD}>
+                <Button>
+                  アイデアを見る
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         )}
