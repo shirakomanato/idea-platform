@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useProtectedRoute } from "@/hooks/useProtectedRoute"
 import { toggleLike, recommendIdea, empathizeWithIdea, getRecommendedIdeas, getEmpathizedIdeas } from "@/lib/supabase/actions"
 import { ROUTES } from "@/lib/routes"
+import { NotificationBell } from "@/components/notification-system"
 
 function DashboardContent() {
   const { currentIdeaIndex, setCurrentIdeaIndex, currentFilter } = useAppStore()
@@ -117,9 +118,18 @@ function DashboardContent() {
           return prev
         })
         
+        // プログレッション結果をチェック
+        let toastMessage = "このアイデアに共感しました！今後の動向を追跡できます。"
+        
+        if (result.progressionTriggered && result.newStatus) {
+          toastMessage = `🎉 アイデアが ${result.newStatus} にレベルアップしました！共感ありがとうございます。`
+        } else if (result.likesCount && [5, 10, 25, 50].includes(result.likesCount)) {
+          toastMessage = `✨ ${result.likesCount}いいね達成！このアイデアに共感しました。`
+        }
+        
         toast({
           title: "✨ 共感完了",
-          description: "このアイデアに共感しました！今後の動向を追跡できます。",
+          description: toastMessage,
         })
         console.log(`Empathized with idea ${currentIdea.id} by ${user.address}`)
       } catch (error) {
@@ -166,11 +176,14 @@ function DashboardContent() {
           <h1 className="text-lg font-semibold">For the Idea Junkies</h1>
         </div>
 
-        <Link href={ROUTES.NEW_IDEA}>
-          <Button variant="ghost" size="icon">
-            <Plus className="w-5 h-5" />
-          </Button>
-        </Link>
+        <div className="flex items-center space-x-1">
+          <NotificationBell />
+          <Link href={ROUTES.NEW_IDEA}>
+            <Button variant="ghost" size="icon">
+              <Plus className="w-5 h-5" />
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Main Content */}

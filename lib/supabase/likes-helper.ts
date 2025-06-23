@@ -1,4 +1,6 @@
 import { createClient } from './client'
+import { IdeaProgressionService } from '../services/idea-progression'
+import { NotificationService } from '../services/notification-service'
 
 interface LikeOperation {
   ideaId: string
@@ -9,6 +11,8 @@ interface LikeResult {
   success: boolean
   liked?: boolean
   likesCount?: number
+  progressionTriggered?: boolean
+  newStatus?: string
   error?: string
 }
 
@@ -191,17 +195,66 @@ export class LikesHelper {
         }
       }
 
-      // Get updated likes count
+      // Get updated likes count and idea info
       const { data: ideaData } = await supabase
         .from('ideas')
-        .select('likes_count')
+        .select('likes_count, status, user_id')
         .eq('id', ideaId)
         .single()
+
+      const newLikesCount = ideaData?.likes_count || 0
+
+      // Update the likes_count in the ideas table to trigger progression check
+      await supabase
+        .from('ideas')
+        .update({ 
+          likes_count: isCurrentlyLiked ? Math.max(0, newLikesCount - 1) : newLikesCount + 1,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', ideaId)
+
+      const finalLikesCount = isCurrentlyLiked ? Math.max(0, newLikesCount - 1) : newLikesCount + 1
+
+      // Record activity for progression tracking
+      const progressionService = new IdeaProgressionService()
+      if (userData.id) {
+        await progressionService.recordActivity(userData.id, ideaId, 'LIKE')
+      }
+
+      // Check for progression after like
+      let progressionTriggered = false
+      let newStatus = undefined
+
+      if (!isCurrentlyLiked) { // Only check progression on new likes
+        try {
+          const progressionResult = await progressionService.checkProgressionEligibility(ideaId)
+          if (progressionResult.success && progressionResult.newStatus) {
+            progressionTriggered = true
+            newStatus = progressionResult.newStatus
+          }
+        } catch (error) {
+          console.warn('Error checking progression:', error)
+        }
+
+        // Check for like milestones
+        const milestones = [5, 10, 25, 50, 100, 250, 500, 1000]
+        if (milestones.includes(finalLikesCount) && ideaData?.user_id) {
+          const notificationService = new NotificationService()
+          await notificationService.sendLikeMilestoneNotification(
+            ideaId,
+            ideaData.user_id,
+            finalLikesCount,
+            finalLikesCount
+          )
+        }
+      }
 
       return { 
         success: true, 
         liked: !isCurrentlyLiked, 
-        likesCount: ideaData?.likes_count || 0 
+        likesCount: finalLikesCount,
+        progressionTriggered,
+        newStatus
       }
     } catch (error) {
       console.error('Error in toggleLike:', error)

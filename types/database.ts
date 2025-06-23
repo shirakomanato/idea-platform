@@ -166,6 +166,169 @@ export interface Database {
           updated_at?: string
         }
       }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          idea_id: string | null
+          type: 'STATUS_CHANGE' | 'DELEGATION' | 'LIKE_MILESTONE' | 'COMMENT' | 'COLLABORATION'
+          title: string
+          message: string
+          action_required: boolean
+          read_at: string | null
+          data: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          idea_id?: string | null
+          type: 'STATUS_CHANGE' | 'DELEGATION' | 'LIKE_MILESTONE' | 'COMMENT' | 'COLLABORATION'
+          title: string
+          message: string
+          action_required?: boolean
+          read_at?: string | null
+          data?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          idea_id?: string | null
+          type?: 'STATUS_CHANGE' | 'DELEGATION' | 'LIKE_MILESTONE' | 'COMMENT' | 'COLLABORATION'
+          title?: string
+          message?: string
+          action_required?: boolean
+          read_at?: string | null
+          data?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      idea_progressions: {
+        Row: {
+          id: string
+          idea_id: string
+          from_status: string | null
+          to_status: string
+          trigger_type: string
+          trigger_data: Json | null
+          triggered_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          idea_id: string
+          from_status?: string | null
+          to_status: string
+          trigger_type: string
+          trigger_data?: Json | null
+          triggered_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          idea_id?: string
+          from_status?: string | null
+          to_status?: string
+          trigger_type?: string
+          trigger_data?: Json | null
+          triggered_by?: string | null
+          created_at?: string
+        }
+      }
+      idea_delegations: {
+        Row: {
+          id: string
+          idea_id: string
+          from_user_id: string | null
+          to_user_id: string
+          reason: string
+          delegated_at: string
+          accepted_at: string | null
+          status: string
+        }
+        Insert: {
+          id?: string
+          idea_id: string
+          from_user_id?: string | null
+          to_user_id: string
+          reason: string
+          delegated_at?: string
+          accepted_at?: string | null
+          status?: string
+        }
+        Update: {
+          id?: string
+          idea_id?: string
+          from_user_id?: string | null
+          to_user_id?: string
+          reason?: string
+          delegated_at?: string
+          accepted_at?: string | null
+          status?: string
+        }
+      }
+      user_activities: {
+        Row: {
+          id: string
+          user_id: string
+          idea_id: string
+          activity_type: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          idea_id: string
+          activity_type: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          idea_id?: string
+          activity_type?: string
+          created_at?: string
+        }
+      }
+      progression_settings: {
+        Row: {
+          id: string
+          from_status: string
+          to_status: string
+          like_threshold_percentage: number | null
+          minimum_likes: number | null
+          inactivity_days: number | null
+          auto_progression: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          from_status: string
+          to_status: string
+          like_threshold_percentage?: number | null
+          minimum_likes?: number | null
+          inactivity_days?: number | null
+          auto_progression?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          from_status?: string
+          to_status?: string
+          like_threshold_percentage?: number | null
+          minimum_likes?: number | null
+          inactivity_days?: number | null
+          auto_progression?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
