@@ -88,3 +88,15 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
 }
+
+@layer utilities {
+  @keyframes shimmer {
+    to {
+      transform: translateX(100%);
+    }
+  }
+  
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+  }
+}

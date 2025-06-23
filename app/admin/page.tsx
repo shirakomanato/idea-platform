@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
 import { BarChart3, TrendingUp, Users, Zap, ArrowRight, Eye, Play } from 'lucide-react'
 import { useAppStore } from '@/lib/store'
 import { createClient } from '@/lib/supabase/client'
@@ -302,12 +303,12 @@ export default function AdminDashboard() {
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <div className="w-20 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-primary h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${item.percentage}%` }}
-                        />
-                      </div>
+                      <Progress 
+                        value={item.percentage} 
+                        className="h-2 w-24"
+                        variant="default"
+                        showPercentage={false}
+                      />
                       <span className="text-sm font-medium w-10 text-right">
                         {item.percentage}%
                       </span>

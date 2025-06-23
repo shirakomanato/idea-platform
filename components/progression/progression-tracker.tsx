@@ -19,6 +19,7 @@ import {
 import { AutoProgressionService, type ProgressionStats, type AutoProgressionResult } from '@/lib/services/auto-progression-service'
 import { useToast } from '@/hooks/use-toast'
 import { useAppStore } from '@/lib/store'
+import { cn } from '@/lib/utils'
 
 export function ProgressionTracker() {
   const [stats, setStats] = useState<ProgressionStats | null>(null)
@@ -179,9 +180,20 @@ export function ProgressionTracker() {
           <div className="space-y-3">
             <div className="flex items-center justify-between text-sm">
               <span>全体進行度</span>
-              <span>{stats.progressionRate.toFixed(1)}%</span>
+              <span className="font-medium">{stats.progressionRate.toFixed(1)}%</span>
             </div>
-            <Progress value={stats.progressionRate} className="h-2" />
+            <Progress 
+              value={stats.progressionRate} 
+              className="h-3" 
+              variant="gradient"
+              showPercentage={false}
+            />
+            <div className="text-xs text-muted-foreground text-center">
+              {stats.progressionRate >= 75 ? "🎉 素晴らしい進行率です！" :
+               stats.progressionRate >= 50 ? "📈 順調に進行中" :
+               stats.progressionRate >= 25 ? "🚀 まだまだこれから" :
+               "💡 アイデアを育てていきましょう"}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -207,12 +219,27 @@ export function ProgressionTracker() {
               const percentage = stats.totalIdeas > 0 ? (count / stats.totalIdeas) * 100 : 0
               
               return (
-                <div key={key} className="text-center p-3 rounded-lg border">
-                  <Badge className={getStatusColor(status)} variant="outline">
-                    {label}
-                  </Badge>
-                  <div className="text-xl font-bold mt-2">{count}</div>
-                  <div className="text-xs text-muted-foreground">
+                <div key={key} className="p-3 rounded-lg border space-y-2">
+                  <div className="text-center">
+                    <Badge className={getStatusColor(status)} variant="outline">
+                      {label}
+                    </Badge>
+                    <div className="text-xl font-bold mt-2">{count}</div>
+                  </div>
+                  <Progress 
+                    value={percentage} 
+                    className="h-1"
+                    indicatorClassName={cn(
+                      status === 'finish' ? 'bg-emerald-500' :
+                      status === 'test' ? 'bg-orange-500' :
+                      status === 'in-progress' ? 'bg-yellow-500' :
+                      status === 'commit' ? 'bg-green-500' :
+                      status === 'draft' ? 'bg-indigo-500' :
+                      status === 'pre-draft' ? 'bg-purple-500' :
+                      'bg-blue-500'
+                    )}
+                  />
+                  <div className="text-xs text-muted-foreground text-center">
                     {percentage.toFixed(0)}%
                   </div>
                 </div>
@@ -348,7 +375,11 @@ export function ProgressionWidget() {
           </Badge>
         </div>
         <div className="mt-2">
-          <Progress value={stats.progressionRate} className="h-1" />
+          <Progress 
+            value={stats.progressionRate} 
+            className="h-1.5" 
+            variant="striped"
+          />
         </div>
         <div className="flex justify-between text-xs text-muted-foreground mt-2">
           <span>{stats.totalIdeas}件のアイデア</span>
