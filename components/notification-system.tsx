@@ -1,13 +1,14 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Bell, X, Check, CheckCheck, Clock, MessageSquare, Zap, Users, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useAppStore } from '@/lib/store'
-import { NotificationService, type Notification } from '@/lib/services/notification-service'
+import { type Notification } from '@/lib/services/notification-service'
 import { DelegationService } from '@/lib/services/delegation-service'
+import { useNotifications } from '@/lib/contexts/notification-context'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 
@@ -19,76 +20,20 @@ interface NotificationCenterProps {
 export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps) {
   const { user } = useAppStore()
   const { toast } = useToast()
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [loading, setLoading] = useState(false)
-  const notificationService = new NotificationService()
+  const { notifications, loading, markAsRead, markAllAsRead, loadNotifications } = useNotifications()
   const delegationService = new DelegationService()
 
-  useEffect(() => {
-    if (isOpen && user) {
-      loadNotifications()
-    }
-  }, [isOpen, user])
-
-  useEffect(() => {
-    if (!user) return
-
-    // リアルタイム通知の購読
-    const unsubscribe = notificationService.subscribeToNotifications(user.id, (newNotification) => {
-      setNotifications(prev => [newNotification, ...prev])
-      
-      // トーストで新しい通知を表示
-      toast({
-        title: newNotification.title,
-        description: newNotification.message,
-      })
-    })
-
-    return unsubscribe
-  }, [user, toast])
-
-  const loadNotifications = async () => {
-    if (!user) return
-
-    setLoading(true)
-    try {
-      const data = await notificationService.getUserNotifications(user.id)
-      setNotifications(data)
-    } catch (error) {
-      console.error('Error loading notifications:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleMarkAsRead = async (notificationId: string) => {
-    if (!user) return
-
     try {
-      await notificationService.markAsRead(notificationId, user.id)
-      setNotifications(prev =>
-        prev.map(n =>
-          n.id === notificationId
-            ? { ...n, read_at: new Date().toISOString() }
-            : n
-        )
-      )
+      await markAsRead(notificationId)
     } catch (error) {
       console.error('Error marking notification as read:', error)
     }
   }
 
   const handleMarkAllAsRead = async () => {
-    if (!user) return
-
     try {
-      await notificationService.markAllAsRead(user.id)
-      setNotifications(prev =>
-        prev.map(n => ({ ...n, read_at: new Date().toISOString() }))
-      )
-      toast({
-        title: "全ての通知を既読にしました",
-      })
+      await markAllAsRead()
     } catch (error) {
       console.error('Error marking all as read:', error)
     }
@@ -131,7 +76,7 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
       await handleMarkAsRead(notificationId)
       
       // 通知リストを更新
-      await loadNotifications()
+      loadNotifications()
     } catch (error) {
       console.error('Error handling delegation action:', error)
       toast({
@@ -345,38 +290,8 @@ function NotificationItem({
 
 // 通知ベルアイコンコンポーネント
 export function NotificationBell() {
-  const { user } = useAppStore()
-  const [unreadCount, setUnreadCount] = useState(0)
   const [isOpen, setIsOpen] = useState(false)
-  const notificationService = new NotificationService()
-
-  useEffect(() => {
-    if (user) {
-      loadUnreadCount()
-    }
-  }, [user])
-
-  useEffect(() => {
-    if (!user) return
-
-    // リアルタイム更新
-    const unsubscribe = notificationService.subscribeToNotifications(user.id, () => {
-      loadUnreadCount()
-    })
-
-    return unsubscribe
-  }, [user])
-
-  const loadUnreadCount = async () => {
-    if (!user) return
-
-    try {
-      const count = await notificationService.getUnreadCount(user.id)
-      setUnreadCount(count)
-    } catch (error) {
-      console.error('Error loading unread count:', error)
-    }
-  }
+  const { unreadCount } = useNotifications()
 
   return (
     <>

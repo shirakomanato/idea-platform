@@ -337,8 +337,13 @@ export class NotificationService {
       return () => {}
     }
 
+    // ユーザー固有のチャンネル名を使用して重複を防ぐ
+    const channelName = `notifications-${userId}-${Date.now()}`
+    
+    console.log('Creating notification subscription with channel:', channelName)
+
     const subscription = this.supabase
-      .channel('notifications')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -348,12 +353,16 @@ export class NotificationService {
           filter: `user_id=eq.${userId}`
         },
         (payload) => {
+          console.log('Received notification via subscription:', payload.new)
           callback(payload.new as Notification)
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log('Subscription status:', status)
+      })
 
     return () => {
+      console.log('Unsubscribing from channel:', channelName)
       subscription.unsubscribe()
     }
   }
