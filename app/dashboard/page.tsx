@@ -14,6 +14,8 @@ import { useProtectedRoute } from "@/hooks/useProtectedRoute"
 import { toggleLike, recommendIdea, empathizeWithIdea, getRecommendedIdeas, getEmpathizedIdeas } from "@/lib/supabase/actions"
 import { ROUTES } from "@/lib/routes"
 import { NotificationBell } from "@/components/notification-system"
+import { ProgressionWidget } from "@/components/progression/progression-tracker"
+import { AutoProgressionService } from "@/lib/services/auto-progression-service"
 
 function DashboardContent() {
   const { currentIdeaIndex, setCurrentIdeaIndex, currentFilter } = useAppStore()
@@ -24,6 +26,9 @@ function DashboardContent() {
 
   // 保護されたルートの認証チェック
   const { isAuthenticated, user, isLoading } = useProtectedRoute()
+
+  // 自動進行サービス
+  const autoProgressionService = new AutoProgressionService()
 
   // 認証チェック中は早期リターン
   if (isLoading) {
@@ -47,6 +52,17 @@ function DashboardContent() {
       // ユーザーの推薦・共感リストを読み込み
       setRecommendedIdeas(getRecommendedIdeas(user.address))
       setEmpathizedIdeas(getEmpathizedIdeas(user.address))
+
+      // 自動進行チェックを定期実行（10分ごと）
+      const progressionInterval = setInterval(async () => {
+        try {
+          await autoProgressionService.runAutoProgression()
+        } catch (error) {
+          console.warn('Background auto progression failed:', error)
+        }
+      }, 10 * 60 * 1000)
+
+      return () => clearInterval(progressionInterval)
     }
   }, [isAuthenticated, user])
 

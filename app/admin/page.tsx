@@ -4,9 +4,12 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { BarChart3, TrendingUp, Users, Zap, ArrowRight, Eye } from 'lucide-react'
+import { BarChart3, TrendingUp, Users, Zap, ArrowRight, Eye, Play } from 'lucide-react'
 import { useAppStore } from '@/lib/store'
 import { createClient } from '@/lib/supabase/client'
+import { ProgressionTracker } from '@/components/progression/progression-tracker'
+import { AutoProgressionService } from '@/lib/services/auto-progression-service'
+import { useToast } from '@/hooks/use-toast'
 
 interface ProgressionStat {
   from_status: string
@@ -23,14 +26,17 @@ interface StatusDistribution {
 
 export default function AdminDashboard() {
   const { user } = useAppStore()
+  const { toast } = useToast()
   const [progressionStats, setProgressionStats] = useState<ProgressionStat[]>([])
   const [statusDistribution, setStatusDistribution] = useState<StatusDistribution[]>([])
   const [totalIdeas, setTotalIdeas] = useState(0)
   const [totalUsers, setTotalUsers] = useState(0)
   const [recentProgressions, setRecentProgressions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [isRunningProgression, setIsRunningProgression] = useState(false)
 
   const supabase = createClient()
+  const autoProgressionService = new AutoProgressionService()
 
   useEffect(() => {
     if (user) {
@@ -113,6 +119,49 @@ export default function AdminDashboard() {
     }
   }
 
+  const runAutoProgression = async () => {
+    if (isRunningProgression) return
+
+    setIsRunningProgression(true)
+    try {
+      const result = await autoProgressionService.runAutoProgression()
+      
+      if (result.success) {
+        const totalActions = result.promotions.length + result.delegations.length
+        
+        if (totalActions > 0) {
+          toast({
+            title: "🚀 自動進行完了",
+            description: `${result.promotions.length}件の昇格、${result.delegations.length}件の委譲を実行しました`,
+          })
+        } else {
+          toast({
+            title: "✅ チェック完了",
+            description: "現在進行可能なアイデアはありません",
+          })
+        }
+      } else {
+        toast({
+          title: "⚠️ 自動進行エラー",
+          description: result.errors.join(', '),
+          variant: "destructive",
+        })
+      }
+
+      // データを再読み込み
+      await loadDashboardData()
+    } catch (error) {
+      console.error('Error running auto progression:', error)
+      toast({
+        title: "エラー",
+        description: "自動進行の実行に失敗しました",
+        variant: "destructive",
+      })
+    } finally {
+      setIsRunningProgression(false)
+    }
+  }
+
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       'idea': 'bg-blue-100 text-blue-800',
@@ -153,10 +202,29 @@ export default function AdminDashboard() {
             <h1 className="text-3xl font-bold text-foreground">管理ダッシュボード</h1>
             <p className="text-muted-foreground">プログレッション統計とシステム監視</p>
           </div>
-          <Button onClick={loadDashboardData} disabled={loading}>
-            <TrendingUp className="w-4 h-4 mr-2" />
-            更新
-          </Button>
+          <div className="flex space-x-2">
+            <Button 
+              onClick={runAutoProgression}
+              disabled={isRunningProgression}
+              variant="default"
+            >
+              {isRunningProgression ? (
+                <>
+                  <TrendingUp className="w-4 h-4 mr-2 animate-spin" />
+                  実行中...
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4 mr-2" />
+                  自動進行実行
+                </>
+              )}
+            </Button>
+            <Button onClick={loadDashboardData} disabled={loading} variant="outline">
+              <TrendingUp className="w-4 h-4 mr-2" />
+              更新
+            </Button>
+          </div>
         </div>
 
         {/* KPI Cards */}
@@ -209,6 +277,9 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* プログレッション追跡 */}
+        <ProgressionTracker />
 
         {/* Charts and Tables */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
