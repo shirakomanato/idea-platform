@@ -182,33 +182,65 @@ function DashboardContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4">
-        <Button variant="ghost" size="icon">
-          <Menu className="w-5 h-5" />
-        </Button>
+    <div className="min-h-screen bg-white">
+      {/* Google-style Header */}
+      <div className="sticky top-0 z-40 w-full border-b border-gray-200/50 bg-white/80 backdrop-blur-lg">
+        <div className="flex items-center justify-between px-6 py-4">
+          {/* Left section */}
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <div className="w-8 h-8 bg-google-gradient rounded-full flex items-center justify-center shadow-google">
+                  <Sparkles className="w-4 h-4 text-white" />
+                </div>
+                <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-google-yellow rounded-full animate-pulse" />
+              </div>
+              <div>
+                <h1 className="text-xl font-display font-semibold text-gray-900">Idea Platform</h1>
+                <p className="text-xs text-google-gray font-medium">For the Idea Junkies</p>
+              </div>
+            </div>
+          </div>
 
-        <div className="flex items-center space-x-2">
-          <Sparkles className="w-5 h-5 text-purple-500" />
-          <h1 className="text-lg font-semibold">For the Idea Junkies</h1>
-        </div>
-
-        <div className="flex items-center space-x-1">
-          <NotificationBell />
-          <Link href={ROUTES.NEW_IDEA}>
-            <Button variant="ghost" size="icon">
-              <Plus className="w-5 h-5" />
-            </Button>
-          </Link>
+          {/* Right section */}
+          <div className="flex items-center space-x-2">
+            <NotificationBell />
+            <Link href={ROUTES.NEW_IDEA}>
+              <Button 
+                size="sm"
+                className="bg-google-blue hover:bg-google-blue/90 text-white shadow-google hover:shadow-google-hover transition-all duration-300 rounded-full px-4"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                新規作成
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center p-4 pb-20">
+      <div className="flex-1 flex flex-col items-center p-6 pb-24">
+        {/* Stats and filters section */}
+        <div className="w-full max-w-md mb-6">
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="bg-google-lightGray/50 rounded-2xl p-3 text-center">
+              <div className="text-lg font-bold text-google-blue">{filteredIdeas.length}</div>
+              <div className="text-xs text-google-gray font-medium">アイデア</div>
+            </div>
+            <div className="bg-google-lightGray/50 rounded-2xl p-3 text-center">
+              <div className="text-lg font-bold text-google-green">{empathizedIdeas.length}</div>
+              <div className="text-xs text-google-gray font-medium">共感済み</div>
+            </div>
+            <div className="bg-google-lightGray/50 rounded-2xl p-3 text-center">
+              <div className="text-lg font-bold text-google-yellow">{recommendedIdeas.length}</div>
+              <div className="text-xs text-google-gray font-medium">推薦済み</div>
+            </div>
+          </div>
+        </div>
+        
         {filteredIdeas.length > 0 ? (
           <div className="w-full max-w-md">
-            <div className="relative">
+            <div className="relative mb-6">
               {/* Background cards for stack effect */}
               {filteredIdeas.slice(currentIdeaIndex + 1, currentIdeaIndex + 3).map((idea, index) => (
                 <div
@@ -230,63 +262,79 @@ function DashboardContent() {
               )}
             </div>
             
-            {/* Swipe Instructions - Modern Design */}
-            <div className="mt-8 flex items-center justify-between px-4">
-              <div className="flex items-center space-x-3">
-                <div className="relative">
-                  <button 
-                    onClick={handleSwipeLeft}
-                    className="w-12 h-12 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center shadow-lg transform hover:scale-110 transition-transform cursor-pointer"
-                  >
+            {/* Google-style Swipe Instructions */}
+            <div className="mt-8 space-y-4">
+              {/* Action buttons */}
+              <div className="flex items-center justify-center gap-8">
+                {/* Recommend button */}
+                <button 
+                  onClick={handleSwipeLeft}
+                  className="group flex flex-col items-center space-y-2 p-4 rounded-2xl bg-white border border-gray-200 shadow-google hover:shadow-google-hover transition-all duration-300 active:scale-95"
+                >
+                  <div className="w-12 h-12 bg-gradient-to-br from-google-red to-danger-600 rounded-full flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300">
                     <span className="text-white font-bold text-lg">←</span>
-                  </button>
-                  <div className="absolute -inset-1 bg-red-400 rounded-full blur-md opacity-40 pointer-events-none"></div>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-800 dark:text-white">推薦</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">他の人に紹介</p>
-                </div>
-              </div>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-semibold text-gray-900">推薦</p>
+                    <p className="text-xs text-google-gray">他の人に紹介</p>
+                  </div>
+                </button>
 
-              <div className="flex items-center space-x-3">
-                <div>
-                  <p className="text-sm font-semibold text-gray-800 dark:text-white text-right">共感</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 text-right">いいね！</p>
-                </div>
-                <div className="relative">
-                  <button 
-                    onClick={handleSwipeRight}
-                    className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg transform hover:scale-110 transition-transform cursor-pointer"
-                  >
+                {/* Empathize button */}
+                <button 
+                  onClick={handleSwipeRight}
+                  className="group flex flex-col items-center space-y-2 p-4 rounded-2xl bg-white border border-gray-200 shadow-google hover:shadow-google-hover transition-all duration-300 active:scale-95"
+                >
+                  <div className="w-12 h-12 bg-gradient-to-br from-google-green to-secondary-600 rounded-full flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300">
                     <span className="text-white font-bold text-lg">→</span>
-                  </button>
-                  <div className="absolute -inset-1 bg-green-400 rounded-full blur-md opacity-40 pointer-events-none"></div>
-                </div>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-semibold text-gray-900">共感</p>
+                    <p className="text-xs text-google-gray">いいね！</p>
+                  </div>
+                </button>
+              </div>
+              
+              {/* Instruction text */}
+              <div className="text-center">
+                <p className="text-sm text-google-gray font-medium">
+                  スワイプまたはボタンで操作
+                </p>
               </div>
             </div>
 
-            {/* Progress Indicator */}
-            <div className="mt-4 flex justify-center space-x-1">
-              {filteredIdeas.slice(0, 5).map((_, index) => (
-                <div
-                  key={index}
-                  className={`w-2 h-2 rounded-full ${index === currentIdeaIndex % 5 ? "bg-primary" : "bg-muted"}`}
+            {/* Google-style Progress Indicator */}
+            <div className="mt-6 flex justify-center items-center space-x-2">
+              <span className="text-xs text-google-gray font-medium">
+                {currentIdeaIndex + 1} / {filteredIdeas.length}
+              </span>
+              <div className="w-32 h-1 bg-gray-200 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-google-gradient transition-all duration-500 ease-out"
+                  style={{ width: `${((currentIdeaIndex + 1) / filteredIdeas.length) * 100}%` }}
                 />
-              ))}
+              </div>
             </div>
           </div>
         ) : (
-          <Card className="w-full max-w-sm">
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <Sparkles className="w-12 h-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">アイデアがありません</h3>
-              <p className="text-muted-foreground mb-4">新しいアイデアを投稿してみましょう！</p>
-              <Button onClick={() => router.push("/idea/new")}>
-                <Plus className="w-4 h-4 mr-2" />
-                アイデアを投稿
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="w-full max-w-md">
+            <Card className="bg-white border border-gray-200 shadow-google">
+              <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="w-16 h-16 bg-google-gradient rounded-full flex items-center justify-center mb-6 animate-pulse-scale">
+                  <Sparkles className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">アイデアがありません</h3>
+                <p className="text-google-gray mb-6 leading-relaxed">新しいアイデアを投稿して<br />創造の旅を始めましょう！</p>
+                <Button 
+                  onClick={() => router.push("/idea/new")}
+                  className="bg-google-blue hover:bg-google-blue/90 text-white shadow-google hover:shadow-google-hover transition-all duration-300 rounded-full px-6 py-2"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  アイデアを投稿
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
 
