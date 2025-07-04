@@ -57,7 +57,17 @@ export class IdeaProgressionService {
         .eq('from_status', idea.status)
         .eq('auto_progression', true)
 
-      if (rulesError || !rules?.length) {
+      if (rulesError) {
+        // テーブルが存在しない場合はスキップ
+        if (rulesError.code === 'PGRST116' || rulesError.message?.includes('does not exist')) {
+          console.warn('progression_settings table does not exist, skipping auto-progression')
+          return { success: false, reason: 'Progression table not available' }
+        }
+        console.error('Error fetching progression rules:', rulesError)
+        return { success: false, reason: 'Failed to fetch progression rules' }
+      }
+
+      if (!rules?.length) {
         return { success: false, reason: 'No applicable progression rules' }
       }
 

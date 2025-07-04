@@ -95,12 +95,12 @@ function EmpathizedContent() {
       {/* Main Content */}
       <div className="flex-1 p-4 pb-20">
         {filteredIdeas.length > 0 ? (
-          <div className="grid gap-6 max-w-2xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
             {filteredIdeas.map((idea) => (
               <SwipeCard
                 key={idea.id}
                 idea={idea}
-                className="hover:scale-105 transition-transform duration-200"
+                className="hover:scale-105 transition-transform duration-200 h-full"
               />
             ))}
           </div>

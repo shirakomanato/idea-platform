@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useAppStore } from "@/lib/store"
 import { SwipeCard } from "@/components/swipe-card"
 import { BottomNavigation } from "@/components/bottom-navigation"
@@ -18,6 +19,7 @@ import { ProgressionWidget } from "@/components/progression/progression-tracker"
 import { AutoProgressionService } from "@/lib/services/auto-progression-service"
 
 function DashboardContent() {
+  const router = useRouter()
   const { currentIdeaIndex, setCurrentIdeaIndex, currentFilter } = useAppStore()
   const { ideas: supabaseIdeas, loading, error } = useIdeas()
   const { toast } = useToast()

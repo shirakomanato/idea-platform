@@ -195,25 +195,39 @@ export class LikesHelper {
         }
       }
 
-      // Get updated likes count and idea info
-      const { data: ideaData } = await supabase
-        .from('ideas')
-        .select('likes_count, status, user_id')
-        .eq('id', ideaId)
-        .single()
+      // Get actual likes count from likes table using count function
+      const { count, error: countError } = await supabase
+        .from('likes')
+        .select('*', { count: 'exact', head: true })
+        .eq('idea_id', ideaId)
 
-      const newLikesCount = ideaData?.likes_count || 0
+      if (countError) {
+        console.error('Error counting likes:', countError)
+      }
+
+      const actualLikesCount = count || 0
 
       // Update the likes_count in the ideas table to trigger progression check
-      await supabase
+      const { error: updateError } = await supabase
         .from('ideas')
         .update({ 
-          likes_count: isCurrentlyLiked ? Math.max(0, newLikesCount - 1) : newLikesCount + 1,
+          likes_count: actualLikesCount,
           updated_at: new Date().toISOString()
         })
         .eq('id', ideaId)
 
-      const finalLikesCount = isCurrentlyLiked ? Math.max(0, newLikesCount - 1) : newLikesCount + 1
+      if (updateError) {
+        console.error('Error updating likes count:', updateError)
+      }
+
+      // Get idea info for notifications
+      const { data: ideaData } = await supabase
+        .from('ideas')
+        .select('status, user_id')
+        .eq('id', ideaId)
+        .single()
+
+      const finalLikesCount = actualLikesCount
 
       // Record activity for progression tracking
       const progressionService = new IdeaProgressionService()

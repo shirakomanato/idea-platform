@@ -237,7 +237,7 @@ export function SwipeCard({ idea, onSwipeLeft, onSwipeRight, className, onLikeUp
   return (
     <Card
       className={cn(
-        "w-full max-w-sm mx-auto cursor-pointer transition-all duration-300",
+        "w-full cursor-pointer transition-all duration-300 flex flex-col h-full",
         "bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-950",
         "border-0 shadow-xl hover:shadow-2xl",
         "backdrop-blur-sm",
@@ -272,14 +272,14 @@ export function SwipeCard({ idea, onSwipeLeft, onSwipeRight, className, onLikeUp
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-5">
+      <CardContent className="space-y-3 flex-1 flex flex-col">
         {/* Target Section with Icon */}
         <div className="group">
           <div className="flex items-center gap-2 mb-1.5">
             <Target className="w-4 h-4 text-purple-500" />
             <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Target</p>
           </div>
-          <p className="text-sm text-gray-700 dark:text-gray-300 pl-6 line-clamp-2">{idea.target}</p>
+          <p className="text-sm text-gray-700 dark:text-gray-300 pl-6 line-clamp-1">{idea.target}</p>
         </div>
 
         {/* Why Section with Icon */}
@@ -288,7 +288,7 @@ export function SwipeCard({ idea, onSwipeLeft, onSwipeRight, className, onLikeUp
             <Lightbulb className="w-4 h-4 text-yellow-500" />
             <p className="text-xs font-semibold text-yellow-600 dark:text-yellow-400 uppercase tracking-wider">Why</p>
           </div>
-          <p className="text-sm text-gray-700 dark:text-gray-300 pl-6 line-clamp-3">{whyText}</p>
+          <p className="text-sm text-gray-700 dark:text-gray-300 pl-6 line-clamp-2">{whyText}</p>
         </div>
 
         {/* What Section with Icon */}
@@ -303,7 +303,7 @@ export function SwipeCard({ idea, onSwipeLeft, onSwipeRight, className, onLikeUp
         )}
 
         {/* Author and Date - Modern Design */}
-        <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-800">
+        <div className="flex items-center justify-between pt-3 mt-auto border-t border-gray-200 dark:border-gray-800">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center shadow-md">
               <User className="w-4 h-4 text-white" />
@@ -324,7 +324,7 @@ export function SwipeCard({ idea, onSwipeLeft, onSwipeRight, className, onLikeUp
         </div>
 
         {/* Interaction Buttons - Modern Design */}
-        <div className="flex items-center justify-between pt-3">
+        <div className="flex items-center justify-between pt-2">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
