@@ -63,7 +63,19 @@ export async function updateUserProfile(walletAddress: string, updates: {
       return updatedUser
     }
   } catch (error) {
-    console.error('Error updating user profile:', error)
+    console.error('Error updating user profile details:', {
+      error,
+      errorType: typeof error,
+      errorConstructor: error?.constructor?.name,
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      errorCode: error?.code,
+      errorDetails: error?.details,
+      errorHint: error?.hint,
+      walletAddress,
+      updates,
+      errorString: String(error),
+      errorJSON: JSON.stringify(error, Object.getOwnPropertyNames(error))
+    })
     throw error
   }
 }

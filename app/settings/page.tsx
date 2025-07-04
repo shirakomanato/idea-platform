@@ -148,8 +148,27 @@ function SettingsContent() {
         description: "変更が正常に保存されました",
       })
     } catch (error) {
-      console.error('Settings save error:', error)
-      const errorMessage = error instanceof Error ? error.message : "設定の保存に失敗しました"
+      console.error('Settings save error details:', {
+        error,
+        errorType: typeof error,
+        errorConstructor: error?.constructor?.name,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorStack: error instanceof Error ? error.stack : undefined,
+        errorString: String(error),
+        errorJSON: JSON.stringify(error, Object.getOwnPropertyNames(error)),
+        userAddress: user?.address,
+        formData,
+        updates: Object.keys(updates || {}).length > 0 ? updates : 'No updates'
+      })
+      
+      let errorMessage = "設定の保存に失敗しました"
+      
+      if (error instanceof Error) {
+        errorMessage = error.message
+      } else if (typeof error === 'object' && error !== null) {
+        errorMessage = error.message || error.error_description || error.msg || "設定の保存に失敗しました"
+      }
+      
       toast({
         title: "エラー",
         description: errorMessage,
