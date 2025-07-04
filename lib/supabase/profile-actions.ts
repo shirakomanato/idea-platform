@@ -20,11 +20,15 @@ export async function updateUserProfile(walletAddress: string, updates: {
       .eq('wallet_address', walletAddress)
       .single()
 
+    console.log('Fetch user result:', { existingUser, fetchError })
+
     if (fetchError && fetchError.code !== 'PGRST116') {
+      console.error('Unexpected fetch error:', fetchError)
       throw fetchError
     }
 
     if (!existingUser) {
+      console.log('User not found, creating new user...')
       // User doesn't exist, create new user
       const { data: newUser, error: createError } = await supabase
         .from('users')

@@ -68,6 +68,8 @@ function SettingsContent() {
 
   const handleSave = async () => {
     setIsSaving(true)
+    let updates: any = {}
+    
     try {
       if (!user) {
         throw new Error("ユーザー情報がありません")
@@ -111,7 +113,6 @@ function SettingsContent() {
       }
 
       // Supabaseにプロフィール更新を送信
-      const updates: any = {}
       if (formData.nickname !== user.nickname) {
         updates.nickname = formData.nickname || null
       }
@@ -119,8 +120,11 @@ function SettingsContent() {
         updates.bio = formData.bio || null
       }
 
+      console.log('Prepared updates:', updates)
+
       // 更新が必要な項目がある場合のみSupabaseに送信
       if (Object.keys(updates).length > 0) {
+        console.log('Calling updateUserProfile with:', { address: user.address, updates })
         const updatedUser = await updateUserProfile(user.address, updates)
         
         // ローカルストレージのユーザー情報も更新
@@ -158,7 +162,7 @@ function SettingsContent() {
         errorJSON: JSON.stringify(error, Object.getOwnPropertyNames(error)),
         userAddress: user?.address,
         formData,
-        updates: Object.keys(updates || {}).length > 0 ? updates : 'No updates'
+        updates
       })
       
       let errorMessage = "設定の保存に失敗しました"
