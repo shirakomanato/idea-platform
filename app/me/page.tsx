@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useIdeas } from "@/lib/supabase/hooks"
 import { useProtectedRoute } from "@/hooks/useProtectedRoute"
 import { getEmpathizedIdeas } from "@/lib/supabase/actions"
+import { ROUTES } from "@/lib/routes"
 import type { IdeaWithUser } from "@/types/database"
 
 function ProfileContent() {
@@ -208,6 +209,7 @@ function ProfileContent() {
           <div className="space-y-3">
             <Button 
               variant="outline" 
+              onClick={() => router.push(ROUTES.SETTINGS)}
               className="w-full justify-start bg-white border-gray-200 hover:bg-google-lightGray/50 text-gray-900 transition-all duration-200"
             >
               <Settings className="w-4 h-4 mr-2" />

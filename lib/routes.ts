@@ -14,6 +14,7 @@ export const ROUTES = {
   PRE_DRAFTS: '/pre-drafts',
   PROPOSALS: '/proposals',
   PROFILE: '/me',
+  SETTINGS: '/settings',
   
   // Dynamic routes
   NEW_IDEA: '/idea/new',
@@ -30,6 +31,7 @@ export const PROTECTED_ROUTES = [
   ROUTES.PRE_DRAFTS,
   ROUTES.PROPOSALS,
   ROUTES.PROFILE,
+  ROUTES.SETTINGS,
   ROUTES.NEW_IDEA,
   '/idea', // 動的ルート /idea/[id] をカバー
 ] as const
@@ -72,6 +74,7 @@ export const createNavigationHelper = (router: any) => ({
   toNewIdea: () => router.push(ROUTES.NEW_IDEA),
   toIdeaDetail: (id: string) => router.push(ROUTES.IDEA_DETAIL(id)),
   toProfile: () => router.push(ROUTES.PROFILE),
+  toSettings: () => router.push(ROUTES.SETTINGS),
   toPreDrafts: () => router.push(ROUTES.PRE_DRAFTS),
   toProposals: () => router.push(ROUTES.PROPOSALS),
 })
